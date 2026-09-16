@@ -348,7 +348,7 @@
                     <input type="text" id="up-firstname" required placeholder="NOMBRE" class="editorial-input p-3 text-xs font-mono uppercase">
                     <input type="text" id="up-lastname" placeholder="APELLIDO (OPCIONAL)" class="editorial-input p-3 text-xs font-mono uppercase">
                 </div>
-                <input type="email" id="up-email" required placeholder="CORREO ELECTRÓNICO" class="editorial-input p-3 text-xs font-mono uppercase">
+                <input type="text" id="up-instagram" placeholder="INSTAGRAM (EJ: @usuario)" class="editorial-input p-3 text-xs font-mono" required>
                 <input type="text" id="up-title" required placeholder="TÍTULO DE LA OBRA" class="editorial-input p-3 text-xs font-mono uppercase">
                 <input type="text" id="up-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input p-3 text-xs font-mono uppercase">
                 
@@ -866,25 +866,27 @@
 
         function handleUpload(event) {
     event.preventDefault();
-    const emailInput = document.getElementById('up-email');
-    if (!emailInput.checkValidity()) {
-        emailInput.reportValidity();
-        return;
-    }
+    const instagramInput = document.getElementById('up-instagram');
     const firstName = document.getElementById('up-firstname').value.trim();
     const lastName = document.getElementById('up-lastname').value.trim();
     const title = document.getElementById('up-title').value.trim();
     const desc = document.getElementById('up-desc').value.trim();
     
-    const author = lastName ? `${firstName} ${lastName}` : firstName;
     const previewSrc = document.getElementById('upload-preview').src || 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564';
 
-    communityGallery.unshift({
-        img: previewSrc,
+    const newItem = {
+        id: Date.now(),
+        firstname: firstName,
+        lastname: lastName,
+        instagram: instagramInput.value.trim(),
         title: title.toUpperCase(),
-        author: author,
-        desc: desc
-    });
+        desc: desc,
+        img: previewSrc
+    };
+
+    let pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
+    pending.push(newItem);
+    localStorage.setItem('adv_pending', JSON.stringify(pending));
 
     document.getElementById('upload-success-msg').classList.remove('hidden');
 
