@@ -1,0 +1,117 @@
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Asegurar que exista la carpeta uploads
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configuración de Multer para guardar las imágenes con nombre único
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
+// Archivo JSON para almacenar las obras (pendientes y aprobadas)
+const DATA_FILE = path.join(__dirname, 'data.json');
+function getDatabase() {
+    if (!fs.existsSync(DATA_FILE)) {
+        const initial = { pending: [], approved: [] };
+        fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
+        return initial;
+    }
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+function saveDatabase(data) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname))); // Sirve tus HTML, CSS y JS estáticos
+app.use('/uploads', express.static(uploadsDir)); // Hace accesibles las imágenes subidas
+
+// 1. Recibir nueva obra desde el formulario
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    try {
+        const { firstname, lastname, instagram, title, desc } = req.body;
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
+
+        const newItem = {
+            id: Date.now(),
+            firstname: firstname || '',
+            lastname: lastname || '',
+            instagram: instagram || '',
+            title: (title || '').toUpperCase(),
+            desc: desc || '',
+            img: imageUrl,
+            date: new Date().toISOString()
+        };
+
+        const db = getDatabase();
+        db.pending.push(newItem);
+        saveDatabase(db);
+
+        res.json({ success: true, message: 'Obra subida con éxito' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: 'Error al procesar la subida' });
+    }
+});
+
+// 2. Obtener obras pendientes para el Administrador
+app.get('/api/pending', (req, res) => {
+    const db = getDatabase();
+    res.json(db.pending);
+});
+
+// 3. Aprobar una obra (pasa de pending a approved)
+app.post('/api/approve', (req, res) => {
+    const { id } = req.body;
+    const db = getDatabase();
+    const index = db.pending.findIndex(item => item.id == id);
+    
+    if (index !== -1) {
+        const item = db.pending.splice(index, 1)[0];
+        db.approved.push(item);
+        saveDatabase(db);
+        return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, error: 'Obra no encontrada' });
+});
+
+// 4. Rechazar una obra pendiente
+app.post('/api/reject', (req, res) => {
+    const { id } = req.body;
+    const db = getDatabase();
+    const index = db.pending.findIndex(item => item.id == id);
+    
+    if (index !== -1) {
+        db.pending.splice(index, 1);
+        saveDatabase(db);
+        return res.json({ success: true });
+    }
+    res.status(404).json({ success: false, error: 'Obra no encontrada' });
+});
+
+// 5. Obtener galería de obras aprobadas
+app.get('/api/gallery', (req, res) => {
+    const db = getDatabase();
+    res.json(db.approved);
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
+});
