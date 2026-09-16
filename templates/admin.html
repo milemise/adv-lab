@@ -69,33 +69,36 @@
     </nav>
 
     <main class="flex-grow max-w-7xl mx-auto pt-32 px-4 sm:px-6 lg:px-8 w-full relative mb-24">
-        <header class="text-center max-w-2xl mx-auto space-y-6 mb-8">
+        <header id="auth-container" class="text-center max-w-2xl mx-auto space-y-6 mb-8">
             <p class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 inline-block bg-red-900/10">Acceso Restringido</p>
             <h2 class="text-4xl font-serif font-bold text-white">Mesa Editorial</h2>
             
-            <input type="password" id="admin-password" placeholder="CLAVE DE ACCESO" class="editorial-input text-center py-2 text-sm font-mono mt-4 w-64 uppercase tracking-widest">
-            
-            <div class="flex justify-center gap-6 text-[11px] font-mono tracking-widest uppercase mt-8 border-b border-white/10 pb-4 flex-wrap">
-                <button onclick="switchAdminTab('pending')" id="admin-tab-pending" class="admin-tab-inactive pb-4 -mb-4">En Revisión</button>
-                <button onclick="switchAdminTab('approved')" id="admin-tab-approved" class="admin-tab-inactive pb-4 -mb-4">Obras Públicas</button>
-                <button onclick="switchAdminTab('illustrations')" id="admin-tab-illustrations" class="admin-tab-inactive pb-4 -mb-4 text-space-accent">Subir Ilustración</button>
+            <div class="max-w-xs mx-auto space-y-4 mt-4">
+                <input type="password" id="admin-password" placeholder="CLAVE DE ACCESO" class="editorial-input text-center py-2 text-sm font-mono w-full uppercase tracking-widest">
+                <button onclick="unlockAdmin()" class="w-full py-2 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">Ingresar</button>
             </div>
         </header>
-        
-        <div id="admin-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Contenido dinámico cargado por JavaScript -->
-        </div>
-        
-        <div id="admin-illustrations-upload" class="hidden max-w-2xl mx-auto editorial-border p-8 bg-[#0a0a0f]">
-            <h3 class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Digital</h3>
-            <form onsubmit="handleAdminIllustrationUpload(event)" class="space-y-6">
-                <input type="file" id="admin-file" accept="image/*" class="w-full p-3 border border-white/20 text-sm font-mono" required>
-                <input type="text" id="admin-title" placeholder="TÍTULO DE LA OBRA" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide" required>
-                <input type="text" id="admin-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide">
-                <button type="submit" id="btn-admin-submit" class="w-full py-4 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">
-                    Publicar Inmediatamente
-                </button>
-            </form>
+
+        <div id="admin-content" class="hidden space-y-8">
+            <div class="flex justify-center gap-6 text-[11px] font-mono tracking-widest uppercase border-b border-white/10 pb-4 flex-wrap">
+                <button onclick="switchAdminTab('pending')" id="admin-tab-pending" class="admin-tab-inactive pb-4 -mb-4">En Revisión</button>
+                <button onclick="switchAdminTab('approved')" id="admin-tab-approved" class="admin-tab-active pb-4 -mb-4 font-bold text-white">Obras Públicas</button>
+                <button onclick="switchAdminTab('illustrations')" id="admin-tab-illustrations" class="admin-tab-inactive pb-4 -mb-4 text-space-accent">Subir Ilustración</button>
+            </div>
+
+            <div id="admin-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            
+            <div id="admin-illustrations-upload" class="hidden max-w-2xl mx-auto editorial-border p-8 bg-[#0a0a0f]">
+                <h3 class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Digital</h3>
+                <form onsubmit="handleAdminIllustrationUpload(event)" class="space-y-6">
+                    <input type="file" id="admin-file" accept="image/*" class="w-full p-3 border border-white/20 text-sm font-mono text-white bg-black" required>
+                    <input type="text" id="admin-title" placeholder="TÍTULO DE LA OBRA" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide" required>
+                    <input type="text" id="admin-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide">
+                    <button type="submit" id="btn-admin-submit" class="w-full py-4 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">
+                        Publicar Inmediatamente
+                    </button>
+                </form>
+            </div>
         </div>
     </main>
 
@@ -105,10 +108,25 @@
         </div>
     </footer>
 
-   <script>
-        const API_URL = ''; // (O recuerda cambiar esto si estás en la nube por una URL relativa o tu dominio de Render)
+    <script>
+        const API_URL = '';
 
-        // --- SISTEMA DE PESTAÑAS DE ADMINISTRACIÓN ---
+        function unlockAdmin() {
+            const password = document.getElementById('admin-password').value;
+            if (!password) return;
+            
+            fetch(`${API_URL}/admin/approved?password=${password}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Unauthorized");
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.getElementById('admin-content').classList.remove('hidden');
+                    switchAdminTab('approved');
+                })
+                .catch(() => {
+                    alert("Clave incorrecta.");
+                });
+        }
+
         function switchAdminTab(tabName) {
             const uploadSection = document.getElementById('admin-illustrations-upload');
             const dataContainer = document.getElementById('admin-container');
@@ -130,7 +148,6 @@
             }
         }
 
-        // Función para obtener las fotos con la contraseña
         async function fetchAdminData(type) {
             const password = document.getElementById('admin-password').value;
             const container = document.getElementById('admin-container');
@@ -143,7 +160,6 @@
             container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">Cargando registros...</p>';
 
             try {
-                // NOTA: Si estás en producción en Render, asegúrate de que la URL use el dominio real o una ruta relativa para que no apunte a localhost
                 const res = await fetch(`${API_URL}/admin/${type}?password=${password}`);
                 if (!res.ok) throw new Error("Contraseña incorrecta o error en el servidor.");
                 
@@ -156,17 +172,98 @@
                 }
 
                 items.forEach(photo => {
+                    const isApproved = type === 'approved';
+                    const isPending = type === 'pending';
+                    
                     container.innerHTML += `
-                        <div class="editorial-border p-5 bg-[#0a0a0f] space-y-4">
-                            <img src="/uploads/${photo.image}" class="w-full h-48 object-cover">
-                            <h4 class="font-serif font-bold text-lg text-white">${photo.title}</h4>
-                            <p class="text-xs text-space-muted font-sans">${photo.description || 'Sin descripción'}</p>
-                            <p class="text-[10px] font-mono text-space-accent uppercase">Estado: ${photo.status}</p>
+                        <div class="editorial-border p-5 bg-[#0a0a0f] space-y-4 flex flex-col justify-between">
+                            <div>
+                                <img src="/uploads/${photo.image}" class="w-full h-48 object-cover mb-4">
+                                <h4 class="font-serif font-bold text-lg text-white">${photo.title}</h4>
+                                <p class="text-xs text-space-muted font-sans mt-2">${photo.description || 'Sin descripción'}</p>
+                            </div>
+                            
+                            <div class="flex justify-between items-end border-t border-white/10 pt-4 mt-4">
+                                <p class="text-[10px] font-mono text-space-accent uppercase">Estado: ${photo.status}</p>
+                                
+                                <div class="flex space-x-2">
+                                    ${isPending ? `
+                                        <button onclick="approvePhoto(${photo.id})" class="text-[10px] font-mono tracking-widest uppercase text-green-400 border border-green-500/30 px-3 py-1 bg-green-900/10 hover:bg-green-500 hover:text-white transition-colors">
+                                            Aprobar
+                                        </button>
+                                    ` : ''}
+                                    ${isApproved ? `
+                                        <button onclick="deleteAdminPhoto(${photo.id})" class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 bg-red-900/10 hover:bg-red-500 hover:text-white transition-colors">
+                                            Borrar
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
                         </div>
                     `;
                 });
             } catch (error) {
                 container.innerHTML = `<p class="text-red-400 font-mono text-sm col-span-full text-center">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function approvePhoto(photoId) {
+            const password = document.getElementById('admin-password').value;
+            try {
+                const res = await fetch(`${API_URL}/admin/approve/${photoId}?password=${password}`, {
+                    method: 'PUT'
+                });
+                if (!res.ok) throw new Error("No se pudo aprobar la obra");
+                fetchAdminData('pending');
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function deleteAdminPhoto(photoId) {
+            if (!confirm("¿Estás seguro de que deseas eliminar esta obra definitivamente?")) return;
+            
+            const password = document.getElementById('admin-password').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/photo/${photoId}?password=${password}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!res.ok) throw new Error("No se pudo eliminar la obra desde el servidor.");
+                
+                fetchAdminData('approved');
+            } catch (error) {
+                alert(`Error al eliminar: ${error.message}`);
+            }
+        }
+
+        async function handleAdminIllustrationUpload(event) {
+            event.preventDefault();
+            const password = document.getElementById('admin-password').value;
+            const title = document.getElementById('admin-title').value;
+            const description = document.getElementById('admin-desc').value;
+            const imageFile = document.getElementById('admin-file').files[0];
+
+            const formData = new FormData();
+            formData.append('password', password);
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('image', imageFile);
+
+            try {
+                const res = await fetch(`${API_URL}/admin/illustrations`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) throw new Error("Error al publicar ilustración");
+                alert("Ilustración publicada con éxito");
+                document.getElementById('admin-file').value = '';
+                document.getElementById('admin-title').value = '';
+                document.getElementById('admin-desc').value = '';
+                switchAdminTab('approved');
+            } catch (error) {
+                alert(error.message);
             }
         }
     </script>
