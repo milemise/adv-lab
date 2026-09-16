@@ -174,11 +174,12 @@
                 items.forEach(photo => {
                     const isApproved = type === 'approved';
                     const isPending = type === 'pending';
+                    const imageUrl = photo.image.startsWith('http') ? photo.image : `${API_URL}/uploads/${photo.image}`;
                     
                     container.innerHTML += `
                         <div class="editorial-border p-5 bg-[#0a0a0f] space-y-4 flex flex-col justify-between">
                             <div>
-                                <img src="/uploads/${photo.image}" class="w-full h-48 object-cover mb-4">
+                                <img src="${imageUrl}" class="w-full h-48 object-cover mb-4">
                                 <h4 class="font-serif font-bold text-lg text-white">${photo.title}</h4>
                                 <p class="text-xs text-space-muted font-sans mt-2">${photo.description || 'Sin descripción'}</p>
                             </div>
