@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADV-Lab | Mesa Editorial (Admin)</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
-    
     <script>
         tailwind.config = {
             theme: {
@@ -31,7 +29,6 @@
             }
         }
     </script>
-    
     <style>
         body { background-color: #050508; color: #e2e8f0; overflow-x: hidden; }
         .stars-bg {
@@ -89,14 +86,23 @@
             <div id="admin-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
             
             <div id="admin-illustrations-upload" class="hidden max-w-2xl mx-auto editorial-border p-8 bg-[#0a0a0f]">
-                <h3 class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Digital</h3>
+                <h3 id="form-title" class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Digital</h3>
                 <form onsubmit="handleAdminIllustrationUpload(event)" class="space-y-6">
-                    <input type="file" id="admin-file" accept="image/*" class="w-full p-3 border border-white/20 text-sm font-mono text-white bg-black" required>
+                    <input type="hidden" id="edit-photo-id" value="">
+                    <div>
+                        <label class="block text-xs font-mono text-space-muted uppercase mb-2">Archivo de Imagen</label>
+                        <input type="file" id="admin-file" accept="image/*" class="w-full p-3 border border-white/20 text-sm font-mono text-white bg-black">
+                    </div>
                     <input type="text" id="admin-title" placeholder="TÍTULO DE LA OBRA" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide" required>
                     <input type="text" id="admin-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide">
-                    <button type="submit" id="btn-admin-submit" class="w-full py-4 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">
-                        Publicar Inmediatamente
-                    </button>
+                    <div class="flex gap-4">
+                        <button type="submit" id="btn-admin-submit" class="flex-1 py-4 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">
+                            Publicar Inmediatamente
+                        </button>
+                        <button type="button" id="btn-cancel-edit" onclick="cancelEditMode()" class="hidden px-6 py-4 border border-white/20 font-mono text-[11px] uppercase tracking-widest hover:bg-white/10 transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -142,10 +148,22 @@
             if (tabName === 'illustrations') {
                 if (uploadSection) uploadSection.classList.remove('hidden');
                 if (dataContainer) dataContainer.innerHTML = '';
+                resetFormToUpload();
             } else {
                 if (uploadSection) uploadSection.classList.add('hidden');
                 fetchAdminData(tabName);
             }
+        }
+
+        function resetFormToUpload() {
+            document.getElementById('edit-photo-id').value = '';
+            document.getElementById('form-title').innerText = 'Subir Ilustración Digital';
+            document.getElementById('btn-admin-submit').innerText = 'Publicar Inmediatamente';
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            document.getElementById('admin-title').value = '';
+            document.getElementById('admin-desc').value = '';
+            document.getElementById('admin-file').value = '';
+            document.getElementById('admin-file').required = true;
         }
 
         async function fetchAdminData(type) {
@@ -188,16 +206,17 @@
                                 <p class="text-[10px] font-mono text-space-accent uppercase">Estado: ${photo.status}</p>
                                 
                                 <div class="flex space-x-2">
+                                    <button onclick='prepareEdit(${JSON.stringify(photo)})' class="text-[10px] font-mono tracking-widest uppercase text-blue-400 border border-blue-500/30 px-3 py-1 bg-blue-900/10 hover:bg-blue-500 hover:text-white transition-colors">
+                                        Editar
+                                    </button>
                                     ${isPending ? `
                                         <button onclick="approvePhoto(${photo.id})" class="text-[10px] font-mono tracking-widest uppercase text-green-400 border border-green-500/30 px-3 py-1 bg-green-900/10 hover:bg-green-500 hover:text-white transition-colors">
                                             Aprobar
                                         </button>
                                     ` : ''}
-                                    ${isApproved ? `
-                                        <button onclick="deleteAdminPhoto(${photo.id})" class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 bg-red-900/10 hover:bg-red-500 hover:text-white transition-colors">
-                                            Borrar
-                                        </button>
-                                    ` : ''}
+                                    <button onclick="deleteAdminPhoto(${photo.id}, '${type}')" class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 bg-red-900/10 hover:bg-red-500 hover:text-white transition-colors">
+                                        Borrar
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -206,6 +225,21 @@
             } catch (error) {
                 container.innerHTML = `<p class="text-red-400 font-mono text-sm col-span-full text-center">Error: ${error.message}</p>`;
             }
+        }
+
+        function prepareEdit(photo) {
+            switchAdminTab('illustrations');
+            document.getElementById('edit-photo-id').value = photo.id;
+            document.getElementById('form-title').innerText = 'Editar Ilustración';
+            document.getElementById('btn-admin-submit').innerText = 'Guardar Cambios';
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            document.getElementById('admin-title').value = photo.title || '';
+            document.getElementById('admin-desc').value = photo.description || '';
+            document.getElementById('admin-file').required = false;
+        }
+
+        function cancelEditMode() {
+            switchAdminTab('approved');
         }
 
         async function approvePhoto(photoId) {
@@ -221,19 +255,15 @@
             }
         }
 
-        async function deleteAdminPhoto(photoId) {
+        async function deleteAdminPhoto(photoId, currentType) {
             if (!confirm("¿Estás seguro de que deseas eliminar esta obra definitivamente?")) return;
-            
             const password = document.getElementById('admin-password').value;
-            
             try {
                 const res = await fetch(`${API_URL}/admin/photo/${photoId}?password=${password}`, {
                     method: 'DELETE'
                 });
-                
                 if (!res.ok) throw new Error("No se pudo eliminar la obra desde el servidor.");
-                
-                fetchAdminData('approved');
+                fetchAdminData(currentType);
             } catch (error) {
                 alert(`Error al eliminar: ${error.message}`);
             }
@@ -242,6 +272,7 @@
         async function handleAdminIllustrationUpload(event) {
             event.preventDefault();
             const password = document.getElementById('admin-password').value;
+            const editId = document.getElementById('edit-photo-id').value;
             const title = document.getElementById('admin-title').value;
             const description = document.getElementById('admin-desc').value;
             const imageFile = document.getElementById('admin-file').files[0];
@@ -250,18 +281,26 @@
             formData.append('password', password);
             formData.append('title', title);
             formData.append('description', description);
-            formData.append('image', imageFile);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
 
             try {
-                const res = await fetch(`${API_URL}/admin/illustrations`, {
-                    method: 'POST',
-                    body: formData
-                });
-                if (!res.ok) throw new Error("Error al publicar ilustración");
-                alert("Ilustración publicada con éxito");
-                document.getElementById('admin-file').value = '';
-                document.getElementById('admin-title').value = '';
-                document.getElementById('admin-desc').value = '';
+                let res;
+                if (editId) {
+                    res = await fetch(`${API_URL}/admin/photo/${editId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    res = await fetch(`${API_URL}/admin/illustrations`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                if (!res.ok) throw new Error("Error al guardar la ilustración");
+                alert(editId ? "Ilustración actualizada con éxito" : "Ilustración publicada con éxito");
+                resetFormToUpload();
                 switchAdminTab('approved');
             } catch (error) {
                 alert(error.message);
