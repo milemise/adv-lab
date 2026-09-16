@@ -105,9 +105,70 @@
         </div>
     </footer>
 
-    <script>
-        const API_URL = 'http://127.0.0.1:8000';
-        // Aquí puedes enlazar o replicar las funciones de administración (switchAdminTab, fetchPending, etc.) que se comunican con tu API.
+   <script>
+        const API_URL = 'http://127.0.0.1:8000'; // (O recuerda cambiar esto si estás en la nube por una URL relativa o tu dominio de Render)
+
+        // --- SISTEMA DE PESTAÑAS DE ADMINISTRACIÓN ---
+        function switchAdminTab(tabName) {
+            const uploadSection = document.getElementById('admin-illustrations-upload');
+            const dataContainer = document.getElementById('admin-container');
+            
+            ['pending', 'approved', 'illustrations'].forEach(t => {
+                const btn = document.getElementById('admin-tab-' + t);
+                if (btn) btn.className = "admin-tab-inactive pb-4 -mb-4 hover:text-white";
+            });
+            
+            const activeBtn = document.getElementById('admin-tab-' + tabName);
+            if (activeBtn) activeBtn.className = "admin-tab-active pb-4 -mb-4 font-bold text-white";
+
+            if (tabName === 'illustrations') {
+                if (uploadSection) uploadSection.classList.remove('hidden');
+                if (dataContainer) dataContainer.innerHTML = '';
+            } else {
+                if (uploadSection) uploadSection.classList.add('hidden');
+                fetchAdminData(tabName);
+            }
+        }
+
+        // Función para obtener las fotos con la contraseña
+        async function fetchAdminData(type) {
+            const password = document.getElementById('admin-password').value;
+            const container = document.getElementById('admin-container');
+            
+            if (!password) {
+                container.innerHTML = '<p class="text-red-400 font-mono text-sm col-span-full text-center">Por favor, ingresa la clave de acceso arriba.</p>';
+                return;
+            }
+
+            container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">Cargando registros...</p>';
+
+            try {
+                // NOTA: Si estás en producción en Render, asegúrate de que la URL use el dominio real o una ruta relativa para que no apunte a localhost
+                const res = await fetch(`${API_URL}/admin/${type}?password=${password}`);
+                if (!res.ok) throw new Error("Contraseña incorrecta o error en el servidor.");
+                
+                const items = await res.json();
+                container.innerHTML = '';
+
+                if (items.length === 0) {
+                    container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No hay registros en esta sección.</p>';
+                    return;
+                }
+
+                items.forEach(photo => {
+                    container.innerHTML += `
+                        <div class="editorial-border p-5 bg-[#0a0a0f] space-y-4">
+                            <img src="/uploads/${photo.image}" class="w-full h-48 object-cover">
+                            <h4 class="font-serif font-bold text-lg text-white">${photo.title}</h4>
+                            <p class="text-xs text-space-muted font-sans">${photo.description || 'Sin descripción'}</p>
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Estado: ${photo.status}</p>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                container.innerHTML = `<p class="text-red-400 font-mono text-sm col-span-full text-center">Error: ${error.message}</p>`;
+            }
+        }
     </script>
 </body>
 </html>
