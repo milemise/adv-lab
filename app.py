@@ -7,6 +7,7 @@ from fastapi import FastAPI, Depends, UploadFile, File, Form, HTTPException, Bod
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from PIL import Image
 
@@ -60,6 +61,14 @@ async def home(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
+        context={"request": request}
+    )
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_view(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="admin.html",
         context={"request": request}
     )
 
