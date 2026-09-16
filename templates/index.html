@@ -348,7 +348,7 @@
                     <input type="text" id="up-firstname" required placeholder="NOMBRE" class="editorial-input p-3 text-xs font-mono uppercase">
                     <input type="text" id="up-lastname" placeholder="APELLIDO (OPCIONAL)" class="editorial-input p-3 text-xs font-mono uppercase">
                 </div>
-                <input type="text" id="up-instagram" placeholder="INSTAGRAM (EJ: @usuario)" class="editorial-input p-3 text-xs font-mono" required>
+                <input type="text" id="up-instagram" placeholder="INSTAGRAM (@usuario)" class="editorial-input p-3 text-xs font-mono" required>
                 <input type="text" id="up-title" required placeholder="TÍTULO DE LA OBRA" class="editorial-input p-3 text-xs font-mono uppercase">
                 <input type="text" id="up-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input p-3 text-xs font-mono uppercase">
                 
@@ -867,36 +867,40 @@
         function handleUpload(event) {
     event.preventDefault();
     const instagramInput = document.getElementById('up-instagram');
-    const firstName = document.getElementById('up-firstname').value.trim();
-    const lastName = document.getElementById('up-lastname').value.trim();
-    const title = document.getElementById('up-title').value.trim();
-    const desc = document.getElementById('up-desc').value.trim();
-    
-    const previewSrc = document.getElementById('upload-preview').src || 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564';
+    const firstName = document.getElementById('up-firstname');
+    const lastName = document.getElementById('up-lastname');
+    const title = document.getElementById('up-title');
+    const desc = document.getElementById('up-desc');
+    const preview = document.getElementById('upload-preview');
+    const successMsg = document.getElementById('upload-success-msg');
 
     const newItem = {
         id: Date.now(),
-        firstname: firstName,
-        lastname: lastName,
-        instagram: instagramInput.value.trim(),
-        title: title.toUpperCase(),
-        desc: desc,
-        img: previewSrc
+        firstname: firstName ? firstName.value.trim() : '',
+        lastname: lastName ? lastName.value.trim() : '',
+        instagram: instagramInput ? instagramInput.value.trim() : '',
+        title: title ? title.value.trim().toUpperCase() : '',
+        desc: desc ? desc.value.trim() : '',
+        img: preview ? preview.src : ''
     };
 
     let pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
     pending.push(newItem);
     localStorage.setItem('adv_pending', JSON.stringify(pending));
 
-    document.getElementById('upload-success-msg').classList.remove('hidden');
+    if (successMsg) {
+        successMsg.classList.remove('hidden');
+    }
 
     setTimeout(() => {
         closeUploadModal();
         event.target.reset();
-        document.getElementById('upload-preview').classList.add('hidden');
-        document.getElementById('upload-placeholder').classList.remove('hidden');
-        document.getElementById('upload-success-msg').classList.add('hidden');
-        if (document.getElementById('view-galeria').classList.contains('hidden') === false) {
+        if (preview) preview.classList.add('hidden');
+        const placeholder = document.getElementById('upload-placeholder');
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (successMsg) successMsg.classList.add('hidden');
+        const viewGaleria = document.getElementById('view-galeria');
+        if (viewGaleria && !viewGaleria.classList.contains('hidden')) {
             fetchGallery();
         }
     }, 1800);
