@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADV-Lab | Mesa Editorial (Admin)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        space: {
+                            bg: '#050508',
+                            panel: '#0a0a0f',
+                            accent: '#a8b1ff',
+                            text: '#e2e8f0',
+                            muted: '#64748b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #050508; color: #e2e8f0; overflow-x: hidden; }
+        .stars-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background-image: radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.4), rgba(0,0,0,0)),
+                              radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.3), rgba(0,0,0,0)),
+                              radial-gradient(1.5px 1.5px at 50px 160px, rgba(255,255,255,0.5), rgba(0,0,0,0));
+            background-repeat: repeat; background-size: 250px 250px; opacity: 0.4;
+        }
+        .editorial-border { border: 1px solid rgba(255, 255, 255, 0.08); }
+        .editorial-border-b { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .editorial-input {
+            background: transparent; border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; border-radius: 0; transition: border-color 0.3s ease; width: 100%;
+        }
+        .editorial-input:focus { border-bottom-color: #a8b1ff; outline: none; }
+        .editorial-input::placeholder { color: #64748b; }
+        .admin-tab-active { color: #fff; border-bottom: 1px solid #fff; }
+        .admin-tab-inactive { color: #64748b; border-bottom: 1px solid transparent; }
+        .admin-tab-inactive:hover { color: #fff; }
+    </style>
+</head>
+<body class="font-sans antialiased flex flex-col min-h-screen">
+    <div class="stars-bg"></div>
+
+    <nav class="fixed top-0 w-full z-40 bg-[#050508]/90 backdrop-blur-md editorial-border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center group">
+                <h1 class="text-3xl font-bold font-serif tracking-wide text-white"><i class="fa-solid fa-sparkles text-space-accent text-xl mr-2"></i>ADV-Lab <span class="text-xs font-mono text-space-muted uppercase ml-2">/ Admin</span></h1>
+            </a>
+            <a href="index.html" class="text-[11px] font-mono tracking-widest uppercase border border-white/20 px-5 py-2 hover:bg-white hover:text-black transition-all">
+                Volver al Sitio
+            </a>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto pt-32 px-4 sm:px-6 lg:px-8 w-full relative mb-24">
+        <header class="text-center max-w-2xl mx-auto space-y-6 mb-8">
+            <p class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 inline-block bg-red-900/10">Acceso Restringido</p>
+            <h2 class="text-4xl font-serif font-bold text-white">Mesa Editorial</h2>
+            
+            <input type="password" id="admin-password" placeholder="CLAVE DE ACCESO" class="editorial-input text-center py-2 text-sm font-mono mt-4 w-64 uppercase tracking-widest">
+            
+            <div class="flex justify-center gap-6 text-[11px] font-mono tracking-widest uppercase mt-8 border-b border-white/10 pb-4 flex-wrap">
+                <button onclick="switchAdminTab('pending')" id="admin-tab-pending" class="admin-tab-inactive pb-4 -mb-4">En Revisión</button>
+                <button onclick="switchAdminTab('approved')" id="admin-tab-approved" class="admin-tab-inactive pb-4 -mb-4">Obras Públicas</button>
+                <button onclick="switchAdminTab('illustrations')" id="admin-tab-illustrations" class="admin-tab-inactive pb-4 -mb-4 text-space-accent">Subir Ilustración</button>
+            </div>
+        </header>
+        
+        <div id="admin-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Contenido dinámico cargado por JavaScript -->
+        </div>
+        
+        <div id="admin-illustrations-upload" class="hidden max-w-2xl mx-auto editorial-border p-8 bg-[#0a0a0f]">
+            <h3 class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Digital</h3>
+            <form onsubmit="handleAdminIllustrationUpload(event)" class="space-y-6">
+                <input type="file" id="admin-file" accept="image/*" class="w-full p-3 border border-white/20 text-sm font-mono" required>
+                <input type="text" id="admin-title" placeholder="TÍTULO DE LA OBRA" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide" required>
+                <input type="text" id="admin-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide">
+                <button type="submit" id="btn-admin-submit" class="w-full py-4 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">
+                    Publicar Inmediatamente
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="mt-auto border-t border-white/10 bg-[#050508] py-8">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <p class="text-[10px] font-mono tracking-widest text-space-muted uppercase">© 2026 ADV-Lab. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+        // Aquí puedes enlazar o replicar las funciones de administración (switchAdminTab, fetchPending, etc.) que se comunican con tu API.
+    </script>
+</body>
+</html>
