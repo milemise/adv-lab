@@ -4,307 +4,233 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADV-Lab | Mesa Editorial (Admin)</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Cinzel', 'serif'],
                         mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
                         space: {
-                            bg: '#050508',
-                            panel: '#0a0a0f',
-                            accent: '#a8b1ff',
-                            text: '#e2e8f0',
-                            muted: '#64748b'
+                            dark: '#050508',
+                            panel: '#0d0d14',
+                            border: '#232336',
+                            accent: '#c5a880',
+                            muted: '#8a8a9e'
                         }
                     }
                 }
             }
         }
     </script>
+    
     <style>
         body { background-color: #050508; color: #e2e8f0; overflow-x: hidden; }
-        .stars-bg {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-            background-image: radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.4), rgba(0,0,0,0)),
-                              radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.3), rgba(0,0,0,0)),
-                              radial-gradient(1.5px 1.5px at 50px 160px, rgba(255,255,255,0.5), rgba(0,0,0,0));
-            background-repeat: repeat; background-size: 250px 250px; opacity: 0.4;
-        }
-        .editorial-border { border: 1px solid rgba(255, 255, 255, 0.08); }
-        .editorial-border-b { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .editorial-border { border: 1px solid #232336; }
+        .editorial-border-b { border-bottom: 1px solid #232336; }
+        
         .editorial-input {
-            background: transparent; border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: #050508; border: 1px solid #232336;
             color: #fff; border-radius: 0; transition: border-color 0.3s ease; width: 100%;
         }
-        .editorial-input:focus { border-bottom-color: #a8b1ff; outline: none; }
-        .editorial-input::placeholder { color: #64748b; }
-        .admin-tab-active { color: #fff; border-bottom: 1px solid #fff; }
-        .admin-tab-inactive { color: #64748b; border-bottom: 1px solid transparent; }
+        .editorial-input:focus { border-color: #c5a880; outline: none; }
+        .editorial-input::placeholder { color: #8a8a9e; }
+
+        .admin-tab-active { color: #fff; border-bottom: 2px solid #c5a880; }
+        .admin-tab-inactive { color: #8a8a9e; border-bottom: 2px solid transparent; }
         .admin-tab-inactive:hover { color: #fff; }
     </style>
 </head>
 <body class="font-sans antialiased flex flex-col min-h-screen">
-    <div class="stars-bg"></div>
 
-    <nav class="fixed top-0 w-full z-40 bg-[#050508]/90 backdrop-blur-md editorial-border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <a href="index.html" class="flex items-center group">
-                <h1 class="text-3xl font-bold font-serif tracking-wide text-white"><i class="fa-solid fa-sparkles text-space-accent text-xl mr-2"></i>ADV-Lab <span class="text-xs font-mono text-space-muted uppercase ml-2">/ Admin</span></h1>
+    <header class="fixed top-0 w-full z-40 bg-space-dark/90 backdrop-blur-md editorial-border-b">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <i class="fa-solid fa-meteor text-space-accent text-xl"></i>
+                <h1 class="text-2xl font-bold font-serif tracking-widest text-white">ADV-Lab <span class="text-xs font-mono text-space-muted uppercase ml-2">/ Admin</span></h1>
             </a>
-            <a href="index.html" class="text-[11px] font-mono tracking-widest uppercase border border-white/20 px-5 py-2 hover:bg-white hover:text-black transition-all">
+            <a href="index.html" class="text-xs font-mono tracking-widest uppercase border border-[#232336] px-5 py-2.5 hover:bg-white hover:text-black transition-all font-bold">
                 Volver al Sitio
             </a>
         </div>
-    </nav>
+    </header>
 
-    <main class="flex-grow max-w-7xl mx-auto pt-32 px-4 sm:px-6 lg:px-8 w-full relative mb-24">
-        <header id="auth-container" class="text-center max-w-2xl mx-auto space-y-6 mb-8">
-            <p class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 inline-block bg-red-900/10">Acceso Restringido</p>
+    <main class="flex-grow max-w-7xl mx-auto pt-32 px-6 w-full relative mb-24">
+        
+        <!-- SECCIÓN DE AUTENTICACIÓN -->
+        <header id="auth-container" class="text-center max-w-xl mx-auto space-y-6 mb-12">
+            <span class="text-xs font-mono tracking-widest uppercase px-3 py-1 border border-red-500/30 text-red-400 bg-red-950/20">Acceso Restringido</span>
             <h2 class="text-4xl font-serif font-bold text-white">Mesa Editorial</h2>
-            
-            <div class="max-w-xs mx-auto space-y-4 mt-4">
-                <input type="password" id="admin-password" placeholder="CLAVE DE ACCESO" class="editorial-input text-center py-2 text-sm font-mono w-full uppercase tracking-widest">
-                <button onclick="unlockAdmin()" class="w-full py-2 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">Ingresar</button>
+            <div class="max-w-xs mx-auto space-y-4 mt-6">
+                <input type="password" id="admin-password" placeholder="CLAVE DE ACCESO" class="editorial-input text-center py-3 text-xs font-mono uppercase tracking-widest">
+                <button onclick="unlockAdmin()" class="w-full py-3 bg-white text-black font-mono text-xs uppercase font-bold tracking-widest hover:bg-space-accent transition-colors">Ingresar</button>
             </div>
         </header>
 
+        <!-- CONTENIDO DEL PANEL DE ADMIN (BLOQUEADO INICIALMENTE) -->
         <div id="admin-content" class="hidden space-y-8">
-            <div class="flex justify-center gap-6 text-[11px] font-mono tracking-widest uppercase border-b border-white/10 pb-4 flex-wrap">
+            <div class="flex justify-center gap-8 text-xs font-mono tracking-widest uppercase border-b border-[#232336] pb-4 flex-wrap">
                 <button onclick="switchAdminTab('pending')" id="admin-tab-pending" class="admin-tab-inactive pb-4 -mb-4">En Revisión</button>
                 <button onclick="switchAdminTab('approved')" id="admin-tab-approved" class="admin-tab-active pb-4 -mb-4 font-bold text-white">Obras Públicas</button>
                 <button onclick="switchAdminTab('illustrations')" id="admin-tab-illustrations" class="admin-tab-inactive pb-4 -mb-4 text-space-accent">Subir Ilustración</button>
             </div>
 
+            <!-- CONTENEDOR DE TARJETAS DE OBRAS -->
             <div id="admin-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
             
-            <div id="admin-illustrations-upload" class="hidden max-w-2xl mx-auto editorial-border p-8 bg-[#0a0a0f]">
-                <h3 id="form-title" class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Digital</h3>
+            <!-- FORMULARIO PARA SUBIR NUEVAS ILUSTRACIONES CIENTÍFICAS -->
+            <div id="admin-illustrations-upload" class="hidden max-w-2xl mx-auto editorial-border p-8 bg-space-panel">
+                <h3 class="text-2xl font-serif font-bold text-white mb-6">Subir Ilustración Científica</h3>
                 <form onsubmit="handleAdminIllustrationUpload(event)" class="space-y-6">
-                    <input type="hidden" id="edit-photo-id" value="">
-                    <div>
-                        <label class="block text-xs font-mono text-space-muted uppercase mb-2">Archivo de Imagen</label>
-                        <input type="file" id="admin-file" accept="image/*" class="w-full p-3 border border-white/20 text-sm font-mono text-white bg-black">
-                    </div>
-                    <input type="text" id="admin-title" placeholder="TÍTULO DE LA OBRA" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide" required>
-                    <input type="text" id="admin-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input py-3 text-sm font-mono uppercase tracking-wide">
-                    <div class="flex gap-4">
-                        <button type="submit" id="btn-admin-submit" class="flex-1 py-4 bg-white text-black font-mono text-[11px] uppercase tracking-widest font-bold hover:bg-space-accent transition-colors">
-                            Publicar Inmediatamente
-                        </button>
-                        <button type="button" id="btn-cancel-edit" onclick="cancelEditMode()" class="hidden px-6 py-4 border border-white/20 font-mono text-[11px] uppercase tracking-widest hover:bg-white/10 transition-colors">
-                            Cancelar
-                        </button>
-                    </div>
+                    <input type="file" id="admin-file" accept="image/*" class="w-full p-3 editorial-input text-xs font-mono" required>
+                    <input type="text" id="admin-title" placeholder="TÍTULO DE LA OBRA" class="editorial-input p-3 text-xs font-mono uppercase tracking-wide" required>
+                    <textarea id="admin-desc" placeholder="DESCRIPCIÓN (Opcional)" rows="3" class="w-full editorial-input p-3 text-xs font-mono uppercase tracking-wide"></textarea>
+                    <button type="submit" class="w-full py-4 bg-white text-black font-mono text-xs uppercase font-bold tracking-widest hover:bg-space-accent transition-colors">
+                        Publicar Ilustración
+                    </button>
                 </form>
             </div>
         </div>
     </main>
 
-    <footer class="mt-auto border-t border-white/10 bg-[#050508] py-8">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <p class="text-[10px] font-mono tracking-widest text-space-muted uppercase">© 2026 ADV-Lab. Todos los derechos reservados.</p>
+    <footer class="mt-auto editorial-border-t bg-space-dark py-8">
+        <div class="max-w-7xl mx-auto px-6 text-center text-xs font-mono text-space-muted">
+            <p>© 2026 ADV-Lab. Todos los derechos reservados.</p>
         </div>
     </footer>
 
     <script>
-        const API_URL = '';
-
         function unlockAdmin() {
             const password = document.getElementById('admin-password').value;
-            if (!password) return;
-            
-            fetch(`${API_URL}/admin/approved?password=${password}`)
-                .then(res => {
-                    if (!res.ok) throw new Error("Unauthorized");
-                    document.getElementById('auth-container').classList.add('hidden');
-                    document.getElementById('admin-content').classList.remove('hidden');
-                    switchAdminTab('approved');
-                })
-                .catch(() => {
-                    alert("Clave incorrecta.");
-                });
-        }
-
-        function switchAdminTab(tabName) {
-            const uploadSection = document.getElementById('admin-illustrations-upload');
-            const dataContainer = document.getElementById('admin-container');
-            
-            ['pending', 'approved', 'illustrations'].forEach(t => {
-                const btn = document.getElementById('admin-tab-' + t);
-                if (btn) btn.className = "admin-tab-inactive pb-4 -mb-4 hover:text-white";
-            });
-            
-            const activeBtn = document.getElementById('admin-tab-' + tabName);
-            if (activeBtn) activeBtn.className = "admin-tab-active pb-4 -mb-4 font-bold text-white";
-
-            if (tabName === 'illustrations') {
-                if (uploadSection) uploadSection.classList.remove('hidden');
-                if (dataContainer) dataContainer.innerHTML = '';
-                resetFormToUpload();
+            if (password === 'ADV2026') {
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                switchAdminTab('pending');
             } else {
-                if (uploadSection) uploadSection.classList.add('hidden');
-                fetchAdminData(tabName);
+                alert("Clave incorrecta.");
             }
         }
 
-        function resetFormToUpload() {
-            document.getElementById('edit-photo-id').value = '';
-            document.getElementById('form-title').innerText = 'Subir Ilustración Digital';
-            document.getElementById('btn-admin-submit').innerText = 'Publicar Inmediatamente';
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            document.getElementById('admin-title').value = '';
-            document.getElementById('admin-desc').value = '';
-            document.getElementById('admin-file').value = '';
-            document.getElementById('admin-file').required = true;
-        }
+        function switchAdminTab(tab) {
+            ['pending', 'approved', 'illustrations'].forEach(t => {
+                const el = document.getElementById('admin-tab-' + t);
+                if(el) el.className = "admin-tab-inactive pb-4 -mb-4 hover:text-white text-space-muted";
+            });
+            const act = document.getElementById('admin-tab-' + tab);
+            if(act) act.className = "admin-tab-active pb-4 -mb-4 font-bold text-white";
 
-        async function fetchAdminData(type) {
-            const password = document.getElementById('admin-password').value;
             const container = document.getElementById('admin-container');
+            const uploadBox = document.getElementById('admin-illustrations-upload');
             
-            if (!password) {
-                container.innerHTML = '<p class="text-red-400 font-mono text-sm col-span-full text-center">Por favor, ingresa la clave de acceso arriba.</p>';
+            if (tab === 'illustrations') {
+                container.innerHTML = '';
+                uploadBox.classList.remove('hidden');
                 return;
             }
+            uploadBox.classList.add('hidden');
 
-            container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">Cargando registros...</p>';
-
-            try {
-                const res = await fetch(`${API_URL}/admin/${type}?password=${password}`);
-                if (!res.ok) throw new Error("Contraseña incorrecta o error en el servidor.");
-                
-                const items = await res.json();
-                container.innerHTML = '';
-
-                if (items.length === 0) {
-                    container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No hay registros en esta sección.</p>';
+            if (tab === 'pending') {
+                const pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
+                if (pending.length === 0) {
+                    container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No hay obras pendientes de revisión.</p>';
                     return;
                 }
-
-                items.forEach(photo => {
-                    const isApproved = type === 'approved';
-                    const isPending = type === 'pending';
-                    const imageUrl = photo.image.startsWith('http') ? photo.image : `${API_URL}/uploads/${photo.image}`;
-                    
+                container.innerHTML = '';
+                pending.forEach(item => {
                     container.innerHTML += `
-                        <div class="editorial-border p-5 bg-[#0a0a0f] space-y-4 flex flex-col justify-between">
+                        <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between">
                             <div>
-                                <img src="${imageUrl}" class="w-full h-48 object-cover mb-4">
-                                <h4 class="font-serif font-bold text-lg text-white">${photo.title}</h4>
-                                <p class="text-xs text-space-muted font-sans mt-2">${photo.description || 'Sin descripción'}</p>
+                                <img src="${item.img}" class="w-full h-48 object-cover mb-4">
+                                <h4 class="text-xl font-serif font-bold text-white">${item.title}</h4>
+                                <p class="text-xs text-space-accent font-mono mt-1">Autor: ${item.firstname} ${item.lastname} (${item.email})</p>
+                                <p class="text-xs text-space-muted mt-2">${item.desc || 'Sin descripción'}</p>
                             </div>
-                            
-                            <div class="flex justify-between items-end border-t border-white/10 pt-4 mt-4">
-                                <p class="text-[10px] font-mono text-space-accent uppercase">Estado: ${photo.status}</p>
-                                
-                                <div class="flex space-x-2">
-                                    <button onclick='prepareEdit(${JSON.stringify(photo)})' class="text-[10px] font-mono tracking-widest uppercase text-blue-400 border border-blue-500/30 px-3 py-1 bg-blue-900/10 hover:bg-blue-500 hover:text-white transition-colors">
-                                        Editar
-                                    </button>
-                                    ${isPending ? `
-                                        <button onclick="approvePhoto(${photo.id})" class="text-[10px] font-mono tracking-widest uppercase text-green-400 border border-green-500/30 px-3 py-1 bg-green-900/10 hover:bg-green-500 hover:text-white transition-colors">
-                                            Aprobar
-                                        </button>
-                                    ` : ''}
-                                    <button onclick="deleteAdminPhoto(${photo.id}, '${type}')" class="text-[10px] font-mono tracking-widest uppercase text-red-400 border border-red-500/30 px-3 py-1 bg-red-900/10 hover:bg-red-500 hover:text-white transition-colors">
-                                        Borrar
-                                    </button>
-                                </div>
+                            <div class="flex gap-4 mt-6">
+                                <button onclick="approveItem(${item.id})" class="w-1/2 py-2 bg-white text-black font-mono text-[10px] uppercase font-bold hover:bg-space-accent transition-colors">Aprobar</button>
+                                <button onclick="rejectItem(${item.id})" class="w-1/2 py-2 border border-red-500/50 text-red-400 font-mono text-[10px] uppercase font-bold hover:bg-red-500/10 transition-colors">Rechazar</button>
                             </div>
                         </div>
                     `;
                 });
-            } catch (error) {
-                container.innerHTML = `<p class="text-red-400 font-mono text-sm col-span-full text-center">Error: ${error.message}</p>`;
+            } else if (tab === 'approved') {
+                const approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
+                if (approved.length === 0) {
+                    container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No hay obras públicas en la exhibición.</p>';
+                    return;
+                }
+                container.innerHTML = '';
+                approved.forEach(item => {
+                    container.innerHTML += `
+                        <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between">
+                            <div>
+                                <img src="${item.img}" class="w-full h-48 object-cover mb-4">
+                                <h4 class="text-xl font-serif font-bold text-white">${item.title}</h4>
+                                <p class="text-xs text-space-accent font-mono mt-1">Autor: ${item.firstname} ${item.lastname}</p>
+                            </div>
+                            <button onclick="removeApprovedItem(${item.id})" class="w-full mt-6 py-2 border border-red-500/50 text-red-400 font-mono text-[10px] uppercase font-bold hover:bg-red-500/10 transition-colors">Eliminar de Exhibición</button>
+                        </div>
+                    `;
+                });
             }
         }
 
-        function prepareEdit(photo) {
-            switchAdminTab('illustrations');
-            document.getElementById('edit-photo-id').value = photo.id;
-            document.getElementById('form-title').innerText = 'Editar Ilustración';
-            document.getElementById('btn-admin-submit').innerText = 'Guardar Cambios';
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            document.getElementById('admin-title').value = photo.title || '';
-            document.getElementById('admin-desc').value = photo.description || '';
-            document.getElementById('admin-file').required = false;
+        function approveItem(id) {
+            let pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
+            let approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
+            const index = pending.findIndex(i => i.id === id);
+            if (index !== -1) {
+                approved.push(pending[index]);
+                pending.splice(index, 1);
+                localStorage.setItem('adv_pending', JSON.stringify(pending));
+                localStorage.setItem('adv_approved', JSON.stringify(approved));
+                switchAdminTab('pending');
+            }
         }
 
-        function cancelEditMode() {
+        function rejectItem(id) {
+            let pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
+            pending = pending.filter(i => i.id !== id);
+            localStorage.setItem('adv_pending', JSON.stringify(pending));
+            switchAdminTab('pending');
+        }
+
+        function removeApprovedItem(id) {
+            let approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
+            approved = approved.filter(i => i.id !== id);
+            localStorage.setItem('adv_approved', JSON.stringify(approved));
             switchAdminTab('approved');
         }
 
-        async function approvePhoto(photoId) {
-            const password = document.getElementById('admin-password').value;
-            try {
-                const res = await fetch(`${API_URL}/admin/approve/${photoId}?password=${password}`, {
-                    method: 'PUT'
-                });
-                if (!res.ok) throw new Error("No se pudo aprobar la obra");
-                fetchAdminData('pending');
-            } catch (error) {
-                alert(error.message);
-            }
-        }
-
-        async function deleteAdminPhoto(photoId, currentType) {
-            if (!confirm("¿Estás seguro de que deseas eliminar esta obra definitivamente?")) return;
-            const password = document.getElementById('admin-password').value;
-            try {
-                const res = await fetch(`${API_URL}/admin/photo/${photoId}?password=${password}`, {
-                    method: 'DELETE'
-                });
-                if (!res.ok) throw new Error("No se pudo eliminar la obra desde el servidor.");
-                fetchAdminData(currentType);
-            } catch (error) {
-                alert(`Error al eliminar: ${error.message}`);
-            }
-        }
-
-        async function handleAdminIllustrationUpload(event) {
+        function handleAdminIllustrationUpload(event) {
             event.preventDefault();
-            const password = document.getElementById('admin-password').value;
-            const editId = document.getElementById('edit-photo-id').value;
-            const title = document.getElementById('admin-title').value;
-            const description = document.getElementById('admin-desc').value;
-            const imageFile = document.getElementById('admin-file').files[0];
+            const fileInput = document.getElementById('admin-file');
+            const file = fileInput.files[0];
+            if (!file) return;
 
-            const formData = new FormData();
-            formData.append('password', password);
-            formData.append('title', title);
-            formData.append('description', description);
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
-            try {
-                let res;
-                if (editId) {
-                    res = await fetch(`${API_URL}/admin/photo/${editId}`, {
-                        method: 'PUT',
-                        body: formData
-                    });
-                } else {
-                    res = await fetch(`${API_URL}/admin/illustrations`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                }
-                if (!res.ok) throw new Error("Error al guardar la ilustración");
-                alert(editId ? "Ilustración actualizada con éxito" : "Ilustración publicada con éxito");
-                resetFormToUpload();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newIll = {
+                    id: Date.now(),
+                    title: document.getElementById('admin-title').value,
+                    desc: document.getElementById('admin-desc').value,
+                    img: e.target.result
+                };
+                const illustrations = JSON.parse(localStorage.getItem('adv_illustrations') || '[]');
+                illustrations.push(newIll);
+                localStorage.setItem('adv_illustrations', JSON.stringify(illustrations));
+                alert("Ilustración publicada exitosamente.");
+                event.target.reset();
                 switchAdminTab('approved');
-            } catch (error) {
-                alert(error.message);
             }
+            reader.readAsDataURL(file);
         }
     </script>
 </body>

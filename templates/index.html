@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AstroVanguard | Exploración y Ciencia Espacial</title>
+    <title>ADV-Lab | Revista Científica del Cosmos</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Cinzel', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
                     colors: {
                         space: {
                             dark: '#050508',
@@ -20,307 +26,544 @@
                             accent: '#c5a880',
                             muted: '#8a8a9e'
                         }
-                    },
-                    fontFamily: {
-                        serif: ['Cinzel', 'serif'],
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
                     }
                 }
             }
         }
     </script>
+    
     <style>
-        body { background-color: #050508; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #050508; color: #e2e8f0; overflow-x: hidden; }
         .editorial-border { border: 1px solid #232336; }
         .editorial-border-b { border-bottom: 1px solid #232336; }
-        .editorial-border-r { border-right: 1px solid #232336; }
-        .masonry-grid { column-count: 1; column-gap: 1.5rem; }
-        @media(min-width: 768px) { .masonry-grid { column-count: 2; } }
-        @media(min-width: 1024px) { .masonry-grid { column-count: 3; } }
-        .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
+        .editorial-border-t { border-top: 1px solid #232336; }
+        
+        .editorial-input {
+            background: #050508; border: 1px solid #232336;
+            color: #fff; border-radius: 0; transition: border-color 0.3s ease; width: 100%;
+        }
+        .editorial-input:focus { border-color: #c5a880; outline: none; }
+        .editorial-input::placeholder { color: #8a8a9e; }
+
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050508; }
+        ::-webkit-scrollbar-thumb { background: #232336; }
+        ::-webkit-scrollbar-thumb:hover { background: #c5a880; }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #c5a880; cursor: pointer; margin-top: -5px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #232336; border-radius: 2px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-space-accent selection:text-black">
-    <header class="editorial-border-b bg-space-dark/80 backdrop-blur sticky top-0 z-50">
+
+<body class="font-sans antialiased selection:bg-space-accent selection:text-black flex flex-col min-h-screen">
+
+    <header class="fixed top-0 w-full z-40 bg-space-dark/90 backdrop-blur-md editorial-border-b">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('home')">
-                <i class="fa-solid fa-meteor text-space-accent text-2xl"></i>
-                <span class="font-serif font-bold text-xl tracking-widest text-white">ASTROVANGUARD</span>
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('inicio')">
+                <i class="fa-solid fa-meteor text-space-accent text-xl"></i>
+                <h1 class="text-2xl font-bold font-serif tracking-widest text-white">ADV-Lab</h1>
             </div>
-            <nav class="hidden md:flex items-center gap-8 font-mono text-xs uppercase tracking-wider">
-                <button onclick="switchView('home')" id="nav-home" class="text-space-accent transition-colors">Inicio</button>
-                <button onclick="switchView('galeria')" id="nav-galeria" class="text-space-muted hover:text-white transition-colors">Galería</button>
-                <button onclick="switchView('laboratorio')" id="nav-laboratorio" class="text-space-muted hover:text-white transition-colors">Laboratorio</button>
-                <button onclick="switchView('admin')" id="nav-admin" class="text-space-muted hover:text-white transition-colors">Admin</button>
-            </nav>
-            <button onclick="openUploadModal()" class="px-5 py-2.5 bg-white text-black font-mono text-xs uppercase font-bold tracking-wider hover:bg-space-accent transition-colors">Publicar Obra</button>
+
+            <div class="hidden md:flex items-center gap-8 text-xs font-mono tracking-widest uppercase text-space-muted">
+                <button onclick="switchTab('inicio')" id="tab-inicio" class="text-space-accent transition-all">Editorial</button>
+                <button onclick="switchTab('galeria')" id="tab-galeria" class="hover:text-white transition-all">Exhibición</button>
+                <button onclick="switchTab('mapa')" id="tab-mapa" class="hover:text-white transition-all">Observatorio</button>
+                <button onclick="switchTab('laboratorio')" id="tab-laboratorio" class="hover:text-white transition-all">Laboratorio</button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="openUploadModal()" class="hidden sm:block text-xs font-mono tracking-widest uppercase border border-[#232336] px-5 py-2.5 hover:bg-white hover:text-black transition-all font-bold">
+                    Publicar Obra
+                </button>
+            </div>
         </div>
     </header>
 
-    <main class="flex-grow">
-        <div id="view-home" class="max-w-7xl mx-auto px-6 py-12">
-            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-                <div class="lg:col-span-2 editorial-border p-8 bg-space-panel flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-mono text-space-accent uppercase tracking-widest">Astronomía del Día (APOD)</span>
-                            <span class="text-xs font-mono text-space-muted" id="apod-date">NASA API</span>
+    <main class="flex-grow max-w-7xl mx-auto pt-32 px-6 w-full relative mb-24">
+
+        <div id="view-inicio" class="fade-in space-y-16">
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-5 space-y-6">
+                    <span class="text-xs font-mono tracking-widest uppercase text-space-accent">Imagen del Día (NASA)</span>
+                    <h2 id="apod-title" class="text-4xl font-serif font-bold leading-tight text-white">Sintonizando señal...</h2>
+                    <p id="apod-desc" class="text-space-muted font-sans text-sm leading-relaxed">Conectando con servidores para obtener la astrofotografía diaria...</p>
+                    <button onclick="window.open('https://apod.nasa.gov/apod/', '_blank')" class="text-xs font-mono tracking-widest uppercase border-b border-space-accent pb-1 text-space-accent hover:text-white transition-all">Leer Artículo Original <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+                <div class="lg:col-span-7">
+                    <div class="w-full aspect-[4/3] bg-space-panel editorial-border overflow-hidden relative group">
+                        <img id="apod-img" src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2000" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105">
+                    </div>
+                </div>
+            </section>
+
+            <section class="editorial-border-t pt-16">
+                <div class="flex items-center justify-between mb-8 pb-4 editorial-border-b">
+                    <h3 class="text-2xl font-serif font-bold text-white">Noticias Destacadas</h3>
+                    <span class="text-xs font-mono text-space-muted uppercase"></span>
+                </div>
+                <div id="curaduria-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <p class="text-space-muted font-mono text-sm col-span-full text-center">Buscando noticias destacadas...</p>
+                </div>
+            </section>
+
+            <section class="editorial-border-t pt-16">
+                <div class="editorial-border p-8 bg-space-panel relative overflow-hidden">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div class="space-y-4 max-w-lg">
+                            <span class="text-xs font-mono tracking-widest uppercase text-space-accent block"><i class="fa-solid fa-calculator mr-2"></i>Herramienta Interactiva</span>
+                            <h3 class="text-3xl font-serif font-bold text-white">Calculadora de Peso y Edad Planetaria</h3>
+                            <p class="text-xs text-space-muted font-sans leading-relaxed">Descubre cómo varían tu masa ponderal (peso) y tu edad cronológica (según las órbitas alrededor del Sol) en cada uno de los ocho mundos del Sistema Solar.</p>
                         </div>
-                        <h2 class="text-3xl font-serif font-bold text-white mb-4" id="apod-title">Cargando imagen astronómica...</h2>
-                        <p class="text-sm text-space-muted leading-relaxed mb-6" id="apod-desc">Espere mientras se sincronizan los datos con los servidores de la NASA.</p>
+                        <div class="w-full md:w-auto flex flex-col sm:flex-row gap-4 items-center bg-space-dark p-6 editorial-border">
+                            <div>
+                                <label class="text-[10px] font-mono text-space-muted uppercase block mb-1">Peso en Tierra (kg)</label>
+                                <input type="number" id="calc-weight" value="70" class="editorial-input p-2.5 text-xs font-mono w-32" min="1" max="500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-mono text-space-muted uppercase block mb-1">Edad Terrestre</label>
+                                <input type="number" id="calc-age" value="25" class="editorial-input p-2.5 text-xs font-mono w-32" min="1" max="150">
+                            </div>
+                            <button onclick="calcularCosmico()" class="px-6 py-3 bg-white text-black font-mono text-xs uppercase font-bold tracking-widest hover:bg-space-accent transition-colors mt-auto">Calcular</button>
+                        </div>
                     </div>
-                    <div class="relative overflow-hidden editorial-border h-80">
-                        <img id="apod-img" src="" class="w-full h-full object-cover" alt="APOD">
-                    </div>
-                </div>
-                <div class="editorial-border p-8 bg-space-panel flex flex-col justify-between">
-                    <div>
-                        <span class="text-xs font-mono text-space-accent uppercase tracking-widest mb-4 block">Glosario Estelar</span>
-                        <h3 class="text-xl font-serif font-bold text-white mb-3" id="term-title">-</h3>
-                        <p class="text-xs text-space-muted leading-relaxed" id="term-desc">-</p>
-                    </div>
-                    <div class="mt-8 pt-6 editorial-border-t">
-                        <span class="text-[10px] font-mono text-space-accent uppercase tracking-widest block mb-2">Reportes en Vivo</span>
-                        <ul class="space-y-4" id="news-list">
-                            <li class="text-space-muted text-sm font-mono">Cargando reportes...</li>
-                        </ul>
+                    <div id="calc-results" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 editorial-border-t hidden">
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Mercurio</p>
+                            <p id="res-mercurio" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Venus</p>
+                            <p id="res-venus" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Tierra</p>
+                            <p id="res-tierra" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Marte</p>
+                            <p id="res-marte" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Júpiter</p>
+                            <p id="res-jupiter" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Saturno</p>
+                            <p id="res-saturno" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Urano</p>
+                            <p id="res-urano" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="bg-space-dark p-3 editorial-border text-center">
+                            <p class="text-[10px] font-mono text-space-accent uppercase">Neptuno</p>
+                            <p id="res-neptuno" class="text-xs sm:text-sm font-serif font-bold text-white mt-1">-</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section class="mb-16">
-                <div class="flex items-center justify-between mb-8 editorial-border-b pb-4">
-                    <h3 class="text-2xl font-serif font-bold text-white">Curaduría Especializada</h3>
-                    <span class="text-xs font-mono text-space-muted">Spaceflight News API</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="curaduria-container">
-                    <div class="editorial-border p-6 bg-space-panel animate-pulse h-64"></div>
-                    <div class="editorial-border p-6 bg-space-panel animate-pulse h-64"></div>
-                    <div class="editorial-border p-6 bg-space-panel animate-pulse h-64"></div>
+            <section class="editorial-border-t pt-16">
+                <div class="space-y-6">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-mono tracking-widest uppercase text-space-accent block mb-2"><i class="fa-solid fa-calendar-days mr-2"></i>Bitácora Astronómica</span>
+                            <h3 class="text-3xl font-serif font-bold text-white">Efemérides del Mes</h3>
+                        </div>
+                        <div id="current-month-label" class="text-xs font-mono text-space-muted uppercase tracking-widest"></div>
+                    </div>
+                    <div id="astro-calendar-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <p class="text-space-muted font-mono text-sm col-span-full text-center">Cargando efemérides astronómicas...</p>
+                    </div>
                 </div>
             </section>
 
-            <section>
-                <div class="flex items-center justify-between mb-8 editorial-border-b pb-4">
-                    <h3 class="text-2xl font-serif font-bold text-white">Ilustraciones Científicas</h3>
-                    <span class="text-xs font-mono text-space-muted">Archivo Gráfico</span>
+            <section class="editorial-border-t pt-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-5">
+                    <article class="editorial-border p-8 bg-space-panel relative overflow-hidden h-full flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-mono tracking-widest uppercase text-space-accent block mb-2"><i class="fa-solid fa-book-open mr-2"></i>Término del Día</span>
+                            <h4 id="term-title" class="text-3xl font-serif font-bold text-white italic mt-2">Calculando...</h4>
+                            <p id="term-desc" class="text-sm text-space-muted font-sans leading-relaxed mt-4"></p>
+                        </div>
+                    </article>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="illustrations-container"></div>
+                <div class="lg:col-span-7">
+                    <div class="flex justify-between items-end mb-6 editorial-border-b pb-4">
+                        <h3 class="text-2xl font-serif font-bold text-white">Ilustraciones Científicas</h3>
+                        <span class="text-xs font-mono tracking-widest uppercase text-space-muted">Archivo Gráfico</span>
+                    </div>
+                    <div id="illustrations-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <p class="text-space-muted text-xs font-mono col-span-full">Estableciendo enlace de arte digital...</p>
+                    </div>
+                </div>
             </section>
         </div>
 
-        <div id="view-galeria" class="max-w-7xl mx-auto px-6 py-12 hidden">
-            <div class="mb-12 text-center max-w-2xl mx-auto">
-                <span class="text-xs font-mono text-space-accent uppercase tracking-widest mb-2 block">Exhibición Pública</span>
-                <h2 class="text-4xl font-serif font-bold text-white mb-4">Galería Astrofotográfica</h2>
-                <p class="text-sm text-space-muted">Colección de registros astronómicos enviados por la comunidad de observadores y astrofotógrafos.</p>
-            </div>
-            <div class="masonry-grid" id="gallery-container"></div>
+        <div id="view-galeria" class="hidden fade-in space-y-10">
+            <header class="text-center max-w-2xl mx-auto space-y-4 mb-12">
+                <span class="text-xs font-mono tracking-widest uppercase text-space-accent">Exposición Abierta</span>
+                <h2 class="text-4xl font-serif font-bold text-white">El Cielo en Capturas</h2>
+                <p class="text-space-muted text-sm leading-relaxed">Curaduría comunitaria de astrofotografía aprobada por la mesa editorial.</p>
+            </header>
+            <div id="gallery-container"></div>
         </div>
 
-        <div id="view-laboratorio" class="max-w-7xl mx-auto px-6 py-12 hidden">
-            <div class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 editorial-border-b pb-6">
+        <div id="view-mapa" class="hidden fade-in h-[75vh] flex flex-col">
+            <header class="flex justify-between items-end mb-6 editorial-border-b pb-4">
                 <div>
-                    <span class="text-xs font-mono text-space-accent uppercase tracking-widest mb-1 block">Simulador Orbital</span>
-                    <h2 class="text-3xl font-serif font-bold text-white" id="lab-desc">Problema de los 2 Cuerpos: Órbitas</h2>
+                    <h2 class="text-3xl font-serif font-bold text-white">Observatorio Virtual</h2>
+                    <p class="text-space-muted text-xs font-mono mt-1 uppercase tracking-widest">Navegación astronómica interactiva</p>
                 </div>
-                <div class="flex flex-wrap gap-2 font-mono text-xs editorial-border">
-                    <button onclick="selectSim('orbita')" id="btn-sim-orbita" class="px-4 py-2 bg-white text-black transition-colors font-bold">Órbita</button>
-                    <button onclick="selectSim('eclipse')" id="btn-sim-eclipse" class="px-4 py-2 text-space-muted hover:text-white transition-colors border-l border-white/20">Eclipse</button>
-                    <button onclick="selectSim('redshift')" id="btn-sim-redshift" class="px-4 py-2 text-space-muted hover:text-white transition-colors border-l border-white/20">Redshift</button>
-                    <button onclick="selectSim('binaria')" id="btn-sim-binaria" class="px-4 py-2 text-space-muted hover:text-white transition-colors border-l border-white/20">Binaria</button>
-                </div>
+            </header>
+            <div class="editorial-border flex-grow bg-black">
+                <iframe id="sky-iframe" class="w-full h-full" frameborder="0" scrolling="no" src="https://virtualsky.lco.global/embed/index.html?longitude=-65.46&latitude=-33.67&projection=stereo&constellations=true&constellationlabels=true&meteorshowers=true&showstarlabels=true&live=true&az=180&gridlines_az=true"></iframe>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div class="lg:col-span-3 editorial-border bg-space-panel relative h-[500px] overflow-hidden">
-                    <canvas id="canvas-lab" class="w-full h-full block"></canvas>
+        </div>
+
+        <div id="view-laboratorio" class="hidden fade-in space-y-8">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 editorial-border-b pb-4 gap-4">
+                <div>
+                    <span class="text-xs font-mono tracking-widest uppercase text-space-accent">Simulador de Física</span>
+                    <h2 class="text-3xl font-serif font-bold text-white" id="lab-desc">Órbitas Planetarias</h2>
                 </div>
-                <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between">
+                <div class="flex flex-wrap editorial-border text-xs font-mono uppercase">
+                    <button onclick="selectSim('orbita')" id="btn-sim-orbita" class="px-3 py-2 bg-white text-black font-bold transition-colors">Órbita</button>
+                    <button onclick="selectSim('fases')" id="btn-sim-fases" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Fases</button>
+                    <button onclick="selectSim('eclipse')" id="btn-sim-eclipse" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Eclipse</button>
+                    <button onclick="selectSim('cometa')" id="btn-sim-cometa" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Cometa</button>
+                    <button onclick="selectSim('redshift')" id="btn-sim-redshift" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Redshift</button>
+                    <button onclick="selectSim('binaria')" id="btn-sim-binaria" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Binaria</button>
+                    <button onclick="selectSim('sandbox')" id="btn-sim-sandbox" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Sandbox</button>
+                    <button onclick="selectSim('lente')" id="btn-sim-lente" class="px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors">Lente Grav.</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-3 editorial-border bg-space-panel relative h-[480px] overflow-hidden">
+                    <canvas id="canvas-lab" class="w-full h-full cursor-crosshair"></canvas>
+                </div>
+                <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between space-y-6">
                     <div>
-                        <h4 class="font-serif font-bold text-white text-lg mb-6 pb-2 editorial-border-b">Controles de Simulación</h4>
+                        <h4 class="font-serif font-bold text-white text-sm mb-4 pb-2 editorial-border-b uppercase tracking-wider">Parámetros</h4>
+                        
+                        <div id="lab-explanation" class="text-xs text-space-muted font-sans leading-relaxed mb-6 bg-space-dark p-3 editorial-border">
+                            Simulación circular básica del movimiento de un planeta alrededor de una estrella central.
+                        </div>
+
                         <div id="hud-orbita" class="space-y-6">
                             <div>
-                                <div class="flex justify-between text-xs font-mono mb-2">
-                                    <span class="text-space-muted">Distancia Semieje</span>
-                                    <span id="val-orb-dist" class="text-white">120</span>
-                                </div>
-                                <input type="range" id="slider-orb-dist" min="50" max="180" value="120" class="w-full accent-space-accent">
+                                <label class="text-xs text-space-muted uppercase tracking-widest font-mono flex justify-between mb-2">Distancia <span id="val-orb-dist" class="text-white">150</span></label>
+                                <input type="range" id="slider-orb-dist" min="50" max="250" step="1" value="150">
                             </div>
                             <div>
-                                <div class="flex justify-between text-xs font-mono mb-2">
-                                    <span class="text-space-muted">Velocidad Angular</span>
-                                    <span id="val-orb-vel" class="text-white">1.0</span>
-                                </div>
-                                <input type="range" id="slider-orb-vel" min="0.2" max="3.0" step="0.1" value="1.0" class="w-full accent-space-accent">
+                                <label class="text-xs text-space-muted uppercase tracking-widest font-mono flex justify-between mb-2">Velocidad <span id="val-orb-vel" class="text-white">1.0</span></label>
+                                <input type="range" id="slider-orb-vel" min="0.1" max="3" step="0.1" value="1.0">
                             </div>
                         </div>
+
+                        <div id="hud-fases" class="space-y-6 hidden">
+                            <div>
+                                <label class="text-xs text-space-muted uppercase tracking-widest font-mono flex justify-between mb-2">Órbita Lunar <span id="val-fases" class="text-white">0°</span></label>
+                                <input type="range" id="slider-fases" min="0" max="360" step="1" value="0">
+                            </div>
+                        </div>
+
                         <div id="hud-eclipse" class="space-y-6 hidden">
                             <div>
-                                <div class="flex justify-between text-xs font-mono mb-2">
-                                    <span class="text-space-muted">Fase de Ocultación</span>
-                                    <span id="eclipse-status-text" class="text-white">Primer Contacto</span>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-xs text-space-muted uppercase tracking-widest font-mono">Fase</label>
+                                    <span id="eclipse-status-text" class="text-xs font-bold font-mono text-white uppercase tracking-widest bg-white/10 px-2 py-0.5">Parcial</span>
                                 </div>
-                                <input type="range" id="slider-ecl-prog" min="0" max="100" value="0" class="w-full accent-space-accent">
+                                <input type="range" id="slider-ecl-prog" min="0" max="100" step="0.1" value="0">
                             </div>
                         </div>
+
+                        <div id="hud-cometa" class="space-y-6 hidden">
+                            <div>
+                                <label class="text-xs text-space-muted uppercase tracking-widest font-mono flex justify-between mb-2">Excentricidad <span id="val-cometa" class="text-white">0.7</span></label>
+                                <input type="range" id="slider-cometa" min="0.3" max="0.9" step="0.05" value="0.7">
+                            </div>
+                        </div>
+
                         <div id="hud-redshift" class="space-y-6 hidden">
                             <div>
-                                <div class="flex justify-between text-xs font-mono mb-2">
-                                    <span class="text-space-muted">Parámetro z</span>
-                                    <span id="val-redshift" class="text-white">0.00</span>
-                                </div>
-                                <input type="range" id="slider-redshift" min="0" max="2.0" step="0.05" value="0" class="w-full accent-space-accent">
+                                <label class="text-xs text-space-muted uppercase tracking-widest font-mono flex justify-between mb-2">Corrimiento (z) <span id="val-redshift" class="text-white">0.00</span></label>
+                                <input type="range" id="slider-redshift" min="0" max="2" step="0.01" value="0">
                             </div>
                         </div>
+
                         <div id="hud-binaria" class="space-y-6 hidden">
                             <div>
-                                <div class="flex justify-between text-xs font-mono mb-2">
-                                    <span class="text-space-muted">Separación Estelar</span>
-                                    <span id="val-bin-sep" class="text-white">80</span>
-                                </div>
-                                <input type="range" id="slider-bin-sep" min="40" max="120" value="80" class="w-full accent-space-accent">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-mono mb-2">
-                                    <span class="text-space-muted">Velocidad Orbital</span>
-                                    <span id="val-bin-vel" class="text-white">1.0</span>
-                                </div>
-                                <input type="range" id="slider-bin-vel" min="0.2" max="3.0" step="0.1" value="1.0" class="w-full accent-space-accent">
+                                <label class="text-xs text-space-muted uppercase tracking-widest font-mono flex justify-between mb-2">Separación <span id="val-bin-sep" class="text-white">100</span></label>
+                                <input type="range" id="slider-bin-sep" min="30" max="180" step="1" value="100">
                             </div>
                         </div>
-                    </div>
-                    <div class="text-[10px] font-mono text-space-muted pt-6 editorial-border-t">
-                        Motor gráfico HTML5 Canvas optimizado para renderizado en tiempo real.
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div id="view-admin" class="max-w-7xl mx-auto px-6 py-12 hidden">
-            <div class="mb-8 editorial-border p-6 bg-space-panel">
-                <span class="text-xs font-mono text-space-accent uppercase tracking-widest mb-2 block">Acceso Restringido</span>
-                <h2 class="text-2xl font-serif font-bold text-white mb-4">Panel de Administración</h2>
-                <input type="password" id="admin-password" placeholder="Ingrese clave de acceso (ADV2026)" class="w-full md:w-96 px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono focus:outline-none focus:border-space-accent">
-            </div>
-            <div id="admin-content">
-                <div class="flex gap-8 font-mono text-xs uppercase tracking-wider mb-8 editorial-border-b pb-4">
-                    <button onclick="switchAdminTab('pending')" id="admin-tab-pending" class="admin-tab-active pb-4 -mb-4 font-bold text-white">Pendientes</button>
-                    <button onclick="switchAdminTab('approved')" id="admin-tab-approved" class="admin-tab-inactive pb-4 -mb-4 hover:text-white text-space-muted">Aprobadas</button>
-                    <button onclick="switchAdminTab('illustrations')" id="admin-tab-illustrations" class="admin-tab-inactive pb-4 -mb-4 hover:text-white text-space-muted">Ilustraciones</button>
-                </div>
-                <div id="admin-illustrations-upload" class="hidden mb-8 editorial-border p-6 bg-space-panel">
-                    <h3 class="font-serif font-bold text-white text-lg mb-4">Publicar Nueva Ilustración</h3>
-                    <form onsubmit="handleAdminIllustrationUpload(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="admin-title" placeholder="Título de la ilustración" required class="px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono">
-                            <input type="file" id="admin-file" accept="image/*" required class="px-4 py-1.5 bg-space-dark editorial-border text-white text-xs font-mono file:mr-4 file:py-1 file:px-4 file:bg-white file:text-black file:border-0 file:text-xs file:font-mono">
+                        <div id="hud-sandbox" class="space-y-4 hidden">
+                            <p class="text-xs text-space-muted font-sans">Haz clic en cualquier parte del cuadro negro de la simulación para lanzar un nuevo planeta con vector de velocidad orbital.</p>
+                            <button onclick="clearSandbox()" class="w-full py-2 bg-space-dark border border-[#232336] text-xs font-mono text-white uppercase hover:border-space-accent transition-colors">Limpiar Planetas</button>
                         </div>
-                        <textarea id="admin-desc" placeholder="Descripción detallada..." rows="3" required class="w-full px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono"></textarea>
-                        <button type="submit" class="px-6 py-2 bg-white text-black font-mono text-xs uppercase font-bold hover:bg-space-accent transition-colors">Subir Ilustración</button>
-                    </form>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="admin-container">
-                    <p class="text-space-muted font-mono text-sm col-span-full text-center">Ingrese la contraseña para gestionar contenido.</p>
+
+                        <div id="hud-lente" class="space-y-4 hidden">
+                            <p class="text-xs text-space-muted font-sans">Mueve el cursor dentro del área de simulación para desplazar el objeto masivo y observar la distorsión del espacio-tiempo.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="modal-upload" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-6">
-        <div class="editorial-border bg-space-panel p-8 max-w-xl w-full relative">
-            <button onclick="closeUploadModal()" class="absolute top-4 right-4 text-space-muted hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            <h3 class="text-2xl font-serif font-bold text-white mb-2">Enviar Obra a Exhibición</h3>
-            <p class="text-xs text-space-muted mb-6">Complete los campos para someter su registro a revisión editorial.</p>
+    <footer class="mt-auto editorial-border-t bg-space-dark py-8">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-space-muted">
+            <p>© 2026 ADV-Lab. Todos los derechos reservados.</p>
+            <div class="flex gap-6 mt-4 sm:mt-0"></div>
+        </div>
+    </footer>
+
+    <div id="modal-upload" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="editorial-border bg-space-panel w-full max-w-xl p-8 relative">
+            <button onclick="closeUploadModal()" class="absolute top-6 right-6 text-space-muted hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-2xl font-serif font-bold text-white mb-1">Someter a Revisión</h3>
+            <p class="text-xs font-mono text-space-muted uppercase tracking-widest mb-6 border-b pb-4 editorial-border-b">Envía tu obra a la mesa editorial para exhibición.</p>
+            
             <form onsubmit="handleUpload(event)" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="up-firstname" placeholder="Nombre" required class="px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono">
-                    <input type="text" id="up-lastname" placeholder="Apellido" required class="px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono">
-                </div>
-                <input type="email" id="up-email" placeholder="Correo Electrónico" required class="w-full px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono">
-                <input type="text" id="up-title" placeholder="Título de la Obra" required class="w-full px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono">
-                <select id="up-category" class="w-full px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono">
-                    <option value="deepspace">Espacio Profundo</option>
-                    <option value="solarsystem">Sistema Solar</option>
-                    <option value="widefield">Campo Amplio</option>
-                </select>
-                <textarea id="up-desc" placeholder="Descripción técnica del equipo y captura..." rows="3" class="w-full px-4 py-2 bg-space-dark editorial-border text-white text-xs font-mono"></textarea>
-                <div class="editorial-border p-4 text-center cursor-pointer relative" onclick="document.getElementById('file-upload').click()">
-                    <input type="file" id="file-upload" accept="image/*" class="hidden" onchange="previewImage(event)">
-                    <div id="upload-placeholder">
-                        <i class="fa-solid fa-cloud-arrow-up text-space-accent text-2xl mb-2"></i>
-                        <p class="text-xs font-mono text-space-muted">Haga clic para seleccionar imagen</p>
+                <div class="w-full h-36 editorial-border border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-space-accent transition-colors relative overflow-hidden bg-black/40" onclick="document.getElementById('file-upload').click()">
+                    <div id="upload-placeholder" class="text-center p-4">
+                        <i class="fa-solid fa-image text-2xl text-space-accent mb-2"></i>
+                        <p class="text-xs font-sans text-space-muted">Haz clic para seleccionar la imagen</p>
                     </div>
-                    <img id="upload-preview" class="max-h-32 mx-auto hidden object-contain">
+                    <img id="upload-preview" src="" class="hidden absolute inset-0 w-full h-full object-contain bg-black">
+                    <input type="file" id="file-upload" accept="image/*" class="hidden" required onchange="previewImage(event)">
                 </div>
-                <button type="submit" class="w-full py-3 bg-white text-black font-mono text-xs uppercase font-bold tracking-widest hover:bg-space-accent transition-colors">Enviar Registro</button>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="up-firstname" required placeholder="NOMBRE" class="editorial-input p-3 text-xs font-mono uppercase">
+                    <input type="text" id="up-lastname" placeholder="APELLIDO (OPCIONAL)" class="editorial-input p-3 text-xs font-mono uppercase">
+                </div>
+                <input type="email" id="up-email" required placeholder="CORREO ELECTRÓNICO" class="editorial-input p-3 text-xs font-mono uppercase">
+                <input type="text" id="up-title" required placeholder="TÍTULO DE LA OBRA" class="editorial-input p-3 text-xs font-mono uppercase">
+                <input type="text" id="up-desc" placeholder="DESCRIPCIÓN (Opcional)" class="editorial-input p-3 text-xs font-mono uppercase">
+                
+                <button type="submit" class="w-full py-3.5 bg-white text-black font-mono text-xs uppercase font-bold tracking-widest hover:bg-space-accent transition-colors">
+                    Enviar a Revisión
+                </button>
+                <div id="upload-success-msg" class="hidden text-center text-xs font-mono text-space-accent uppercase tracking-widest pt-2">
+                    ¡Enviado correctamente a revisión!
+                </div>
             </form>
         </div>
     </div>
 
-    <div id="modal-lightbox" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-6" onclick="closeLightbox()">
-        <div class="max-w-4xl w-full" onclick="event.stopPropagation()">
-            <img id="lightbox-img" class="w-full max-h-[75vh] object-contain editorial-border mb-4">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h4 id="lightbox-title" class="text-xl font-serif font-bold text-white"></h4>
-                    <p id="lightbox-desc" class="text-xs text-space-muted mt-1"></p>
-                </div>
-                <button onclick="closeLightbox()" class="text-white hover:text-space-accent font-mono text-xs uppercase border px-4 py-2">Cerrar</button>
-            </div>
+    <div id="modal-lightbox" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl hidden flex flex-col items-center justify-center p-4" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white hover:text-space-accent text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        <img id="lightbox-img" src="" class="max-w-full max-h-[75vh] editorial-border object-contain" onclick="event.stopPropagation()">
+        <div id="lightbox-info" class="mt-6 text-center max-w-xl" onclick="event.stopPropagation()">
+            <h3 id="lightbox-title" class="text-2xl font-serif font-bold text-white">Título</h3>
+            <p id="lightbox-desc" class="text-xs text-space-muted mt-2 font-sans"></p>
         </div>
     </div>
 
-    <footer class="editorial-border-t bg-space-dark py-8">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs font-mono text-space-muted">
-            <p>&copy; 2026 ASTROVANGUARD. Todos los derechos reservados.</p>
-            <div class="flex gap-6 mt-4 md:mt-0">
-                <a href="#" class="hover:text-white transition-colors">API Status</a>
-                <a href="#" class="hover:text-white transition-colors">Documentación</a>
-                <a href="#" class="hover:text-white transition-colors">Protocolos</a>
-            </div>
-        </div>
-    </footer>
-
     <script>
+        const API_URL = '';
+
+        let communityGallery = [
+            {
+                img: 'https://images.unsplash.com/photo-1543722530-d2c3201371e7',
+                title: 'Cúmulo Estelar',
+                author: 'Sacha Figueroa',
+                desc: 'Captura de campo amplio en banda H-alpha.'
+            },
+            {
+                img: 'https://images.unsplash.com/photo-1517976487492-5750f3195933',
+                title: 'Vía Láctea Austral',
+                author: 'Archivo ADV',
+                desc: 'Exposición prolongada desde cielos limpios.'
+            }
+        ];
+
         async function traducirTexto(texto) {
-            return texto;
+            if (!texto) return "";
+            try {
+                const limite = texto.substring(0, 400); 
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(limite)}&langpair=en|es`);
+                const data = await res.json();
+                if (data && data.responseData && data.responseData.translatedText) {
+                    let resultado = data.responseData.translatedText;
+                    if (resultado.includes("MYMEMORY WARNING") || data.responseStatus !== 200) return texto;
+                    return resultado;
+                }
+                return texto;
+            } catch (error) {
+                return texto;
+            }
         }
 
-        function switchView(view) {
-            ['home', 'galeria', 'laboratorio', 'admin'].forEach(v => {
-                const el = document.getElementById('view-' + v);
-                const btn = document.getElementById('nav-' + v);
-                if (el) {
-                    if (v === view) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
-                }
-                if (btn) {
-                    if (v === view) {
-                        btn.className = "text-space-accent transition-colors";
-                    } else {
-                        btn.className = "text-space-muted hover:text-white transition-colors";
-                    }
-                }
+        function switchTab(tabId) {
+            ['inicio', 'galeria', 'mapa', 'laboratorio'].forEach(id => {
+                const el = document.getElementById('view-' + id);
+                if(el) el.classList.add('hidden');
+                let btn = document.getElementById('tab-' + id);
+                if(btn) btn.className = "hover:text-white transition-all text-space-muted";
             });
-            if (view === 'laboratorio') {
-                startLabLoop();
+
+            const activeEl = document.getElementById('view-' + tabId);
+            if(activeEl) activeEl.classList.remove('hidden');
+            let actBtn = document.getElementById('tab-' + tabId);
+            if(actBtn) actBtn.className = "text-space-accent transition-all";
+
+            if (tabId === 'galeria') fetchGallery();
+            if (tabId === 'laboratorio') startLabLoop();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function calcularCosmico() {
+            const peso = parseFloat(document.getElementById('calc-weight').value) || 70;
+            const edad = parseFloat(document.getElementById('calc-age').value) || 25;
+
+            const factoresPeso = {
+                mercurio: 0.38,
+                venus: 0.91,
+                tierra: 1.0,
+                marte: 0.38,
+                jupiter: 2.34,
+                saturno: 1.06,
+                urano: 0.92,
+                neptuno: 1.19
+            };
+
+            const factoresEdad = {
+                mercurio: 4.15,
+                venus: 1.625,
+                tierra: 1.0,
+                marte: 0.53,
+                jupiter: 0.084,
+                saturno: 0.034,
+                urano: 0.012,
+                neptuno: 0.006
+            };
+
+            document.getElementById('res-mercurio').innerText = `${(peso * factoresPeso.mercurio).toFixed(1)} kg / ${(edad * factoresEdad.mercurio).toFixed(1)} años`;
+            document.getElementById('res-venus').innerText = `${(peso * factoresPeso.venus).toFixed(1)} kg / ${(edad * factoresEdad.venus).toFixed(1)} años`;
+            document.getElementById('res-tierra').innerText = `${peso} kg / ${edad} años`;
+            document.getElementById('res-marte').innerText = `${(peso * factoresPeso.marte).toFixed(1)} kg / ${(edad * factoresEdad.marte).toFixed(1)} años`;
+            document.getElementById('res-jupiter').innerText = `${(peso * factoresPeso.jupiter).toFixed(1)} kg / ${(edad * factoresEdad.jupiter).toFixed(1)} años`;
+            document.getElementById('res-saturno').innerText = `${(peso * factoresPeso.saturno).toFixed(1)} kg / ${(edad * factoresEdad.saturno).toFixed(1)} años`;
+            document.getElementById('res-urano').innerText = `${(peso * factoresPeso.urano).toFixed(1)} kg / ${(edad * factoresEdad.urano).toFixed(1)} años`;
+            document.getElementById('res-neptuno').innerText = `${(peso * factoresPeso.neptuno).toFixed(1)} kg / ${(edad * factoresEdad.neptuno).toFixed(1)} años`;
+
+            document.getElementById('calc-results').classList.remove('hidden');
+        }
+
+        async function loadAstronomicalCalendar() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            
+            document.getElementById('current-month-label').innerText = `${monthNames[now.getMonth()]} ${year}`;
+
+            try {
+                const res = await fetch(`https://api.farmsense.net/v1/moonphases/?d=${Math.floor(now.getTime() / 1000)}`);
+                const data = await res.json();
+                const grid = document.getElementById('astro-calendar-grid');
+                
+                let events = [
+                    { day: "04", title: "Luna Nueva", desc: "Fase óptima para observación de cielo profundo sin interferencia lumínica lunar." },
+                    { day: "12", title: "Conjunción Planetaria", desc: "Alineación aparente de cuerpos celestes observables poco antes del amanecer." },
+                    { day: "19", title: "Cuarto Creciente", desc: "Iluminación hemisférica ideal para detallar cráteres mediante telescopios de aficionado." },
+                    { day: "26", title: "Luna Llena", desc: "Máximo apogeo lumínico mensual; evento destacado para espectroscopia lunar." }
+                ];
+
+                if (Array.isArray(data) && data.length > 0) {
+                    grid.innerHTML = '';
+                    events.forEach((ev, idx) => {
+                        grid.innerHTML += `
+                            <div class="editorial-border p-5 bg-space-panel flex flex-col justify-between">
+                                <div>
+                                    <span class="text-xs font-mono text-space-accent uppercase">${monthNames[now.getMonth()]} ${ev.day}</span>
+                                    <h4 class="text-lg font-serif font-bold text-white mt-1">${ev.title}</h4>
+                                    <p class="text-xs text-space-muted mt-2">${ev.desc}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    renderDefaultCalendar(grid, monthNames[now.getMonth()]);
+                }
+            } catch (e) {
+                const grid = document.getElementById('astro-calendar-grid');
+                renderDefaultCalendar(grid, monthNames[now.getMonth()]);
             }
-            if (view === 'galeria') {
-                fetchGallery();
-            }
+        }
+
+        function renderDefaultCalendar(grid, monthName) {
+            const efemerides = [
+                { dia: "03", titulo: "Máximo de Lluvia de Meteoros", desc: "Alta actividad de partículas meteoríticas entrando a la atmósfera terrestre a gran velocidad." },
+                { dia: "10", titulo: "Luna Nueva", desc: "Cielo completamente oscuro, perfecto para astrofotografía de nebulosas y galaxias." },
+                { dia: "18", titulo: "Oposición de Planeta Exterior", desc: "El planeta se encuentra más cerca de la Tierra y totalmente iluminado por el Sol." },
+                { dia: "25", titulo: "Luna Llena", desc: "Máxima fase visible del satélite natural, acompañada de constelaciones estacionales." }
+            ];
+            grid.innerHTML = '';
+            efemerides.forEach(ef => {
+                grid.innerHTML += `
+                    <div class="editorial-border p-5 bg-space-panel flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-mono text-space-accent uppercase">${monthName} ${ef.dia}</span>
+                            <h4 class="text-lg font-serif font-bold text-white mt-1">${ef.titulo}</h4>
+                            <p class="text-xs text-space-muted mt-2">${ef.desc}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function loadTermAndIllustrations() {
+            document.getElementById('term-title').innerText = "Espectroscopia";
+            document.getElementById('term-desc').innerText = "Técnica analítica que estudia la interacción entre la radiación electromagnética y la materia, permitiendo determinar la composición química de estrellas y galaxias lejanas mediante la descomposición de la luz en sus longitudes de onda.";
+
+            const illustrationsContainer = document.getElementById('illustrations-container');
+            illustrationsContainer.innerHTML = `
+                <div class="editorial-border p-4 bg-space-panel group cursor-pointer" onclick="openLightbox('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86', 'Nebulosa de la Carina', 'Captura de guardado espectral de viveros estelares activos.')">
+                    <img src="https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86" class="w-full h-48 object-cover mb-3 editorial-border">
+                    <h5 class="font-serif font-bold text-white text-sm">Nebulosa de la Carina</h5>
+                    <p class="text-[10px] font-mono text-space-muted mt-1 uppercase">Placa Espectral 01</p>
+                </div>
+                <div class="editorial-border p-4 bg-space-panel group cursor-pointer" onclick="openLightbox('https://images.unsplash.com/photo-1451187580459-43490279c0fa', 'Red de Campo Profundo', 'Visualización de cúmulos galácticos en el infrarrojo cercano.')">
+                    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa" class="w-full h-48 object-cover mb-3 editorial-border">
+                    <h5 class="font-serif font-bold text-white text-sm">Red de Campo Profundo</h5>
+                    <p class="text-[10px] font-mono text-space-muted mt-1 uppercase">Placa Espectral 02</p>
+                </div>
+            `;
         }
 
         async function loadHomeData() {
             try {
-                const apodRes = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
-                if (!apodRes.ok) throw new Error("Error fetching APOD");
-                const apodData = await apodRes.json();
-                if (apodData.title) {
-                    document.getElementById('apod-title').innerText = await traducirTexto(apodData.title);
-                    document.getElementById('apod-desc').innerText = await traducirTexto(apodData.explanation || '');
-                    if (apodData.url) {
-                        document.getElementById('apod-img').src = apodData.url;
+                const apiKey = 'bI68uH79Z6hIpwHvzppVHjoeWjjwayihl4pz5scV';
+                const apodRes = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey}`);
+                
+                if (apodRes.ok) {
+                    const apodData = await apodRes.json();
+                    if (apodData.title) {
+                        document.getElementById('apod-title').innerText = apodData.title;
+                        document.getElementById('apod-desc').innerText = apodData.explanation || '';
+                        
+                        const imgContainer = document.getElementById('apod-img').parentElement;
+                        if (apodData.media_type === 'video') {
+                            imgContainer.innerHTML = `<iframe src="${apodData.url}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`;
+                        } else if (apodData.url) {
+                            document.getElementById('apod-img').src = apodData.url;
+                        }
+
+                        traducirTexto(apodData.title).then(t => { if(t) document.getElementById('apod-title').innerText = t; });
+                        traducirTexto(apodData.explanation || '').then(d => { if(d) document.getElementById('apod-desc').innerText = d; });
                     }
                 }
             } catch (e) {
@@ -335,124 +578,268 @@
                 if (newsData && newsData.results) {
                     container.innerHTML = '';
                     for (const art of newsData.results) {
-                        const titleEs = await traducirTexto(art.title);
-                        const summaryEs = await traducirTexto(art.summary || '');
                         container.innerHTML += `
                             <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between group cursor-pointer" onclick="window.open('${art.url}', '_blank')">
                                 <div>
+                                    ${art.image_url ? `<img src="${art.image_url}" class="w-full h-40 object-cover mb-4 editorial-border">` : ''}
                                     <p class="text-[10px] font-mono text-space-accent mb-2 uppercase">${art.news_site}</p>
-                                    <h4 class="text-xl font-serif font-bold text-white group-hover:text-space-accent transition-colors">${titleEs}</h4>
-                                    <p class="text-xs text-space-muted mt-3 line-clamp-3">${summaryEs}</p>
+                                    <h4 class="text-lg font-serif font-bold text-white group-hover:text-space-accent transition-colors">${art.title}</h4>
+                                    <p class="text-xs text-space-muted mt-3 line-clamp-3">${art.summary || ''}</p>
                                 </div>
-                                <span class="text-[10px] font-mono text-white mt-6 uppercase tracking-widest border-b border-white/20 pb-1 inline-block w-max">Leer Más <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                                <span class="text-[10px] font-mono text-white mt-6 uppercase tracking-widest border-b border-[#232336] pb-1 inline-block w-max">Leer Más <i class="fa-solid fa-arrow-right ml-1"></i></span>
                             </div>
                         `;
                     }
                 }
             } catch (e) {
-                document.getElementById('curaduria-container').innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No se pudieron cargar las noticias destacadas.</p>';
+                document.getElementById('curaduria-container').innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No se pudieron cargar las noticias.</p>';
             }
 
-            try {
-                const feedRes = await fetch('https://api.spaceflightnewsapi.net/v4/reports/?limit=4');
-                const feedData = await feedRes.json();
-                const list = document.getElementById('news-list');
-                if (feedData && feedData.results) {
-                    list.innerHTML = '';
-                    for (const rep of feedData.results) {
-                        const repTitle = await traducirTexto(rep.title);
-                        list.innerHTML += `
-                            <li class="editorial-border-b border-white/10 pb-4 cursor-pointer group" onclick="window.open('${rep.url}', '_blank')">
-                                <p class="text-[10px] font-mono text-space-accent mb-1">${rep.news_site}</p>
-                                <h5 class="text-sm font-sans text-white group-hover:text-space-accent transition-colors">${repTitle}</h5>
-                            </li>
-                        `;
+            loadAstronomicalCalendar();
+            loadTermAndIllustrations();
+        }
+
+        let currentSim = 'orbita';
+        let labAnimId = null;
+
+        function selectSim(sim) {
+            currentSim = sim;
+            ['orbita', 'fases', 'eclipse', 'cometa', 'redshift', 'binaria', 'sandbox', 'lente'].forEach(s => {
+                let btn = document.getElementById('btn-sim-' + s);
+                let hud = document.getElementById('hud-' + s);
+                if(btn) {
+                    if(s === sim) {
+                        btn.className = "px-3 py-2 bg-white text-black font-bold transition-colors";
+                    } else {
+                        btn.className = "px-3 py-2 text-space-muted hover:text-white border-l border-[#232336] transition-colors";
                     }
                 }
-            } catch (e) {
-                document.getElementById('news-list').innerHTML = '<li class="text-space-muted text-sm font-mono">Sin reportes recientes.</li>';
-            }
+                if(hud) {
+                    if(s === sim) hud.classList.remove('hidden');
+                    else hud.classList.add('hidden');
+                }
+            });
 
-            const terms = [
-                { title: "Horizonte de Eventos", desc: "Superficie límite alrededor de un agujero negro de la cual nada, ni siquiera la luz, puede escapar debido a la intensa gravedad." },
-                { title: "Parsec", desc: "Unidad de distancia astronómica equivalente a aproximadamente 3.26 años luz o 30.8 billones de kilómetros." },
-                { title: "Lente Gravitacional", desc: "Fenómeno donde la luz procedente de un objeto distante es desviada por la gravedad de un objeto masivo intermedio." },
-                { title: "Nebulosa Planetaria", desc: "Envoltura luminosa de gas y plasma expulsada por ciertas estrellas al final de su etapa de gigante roja." }
-            ];
-            const randomTerm = terms[Math.floor(Math.random() * terms.length)];
-            document.getElementById('term-title').innerText = randomTerm.title;
-            document.getElementById('term-desc').innerText = randomTerm.desc;
-
-            loadIllustrations();
+            const explanations = {
+                orbita: "Simulación circular básica del movimiento de un planeta alrededor de una estrella central.",
+                fases: "Representación geométrica de las fases lunares en función de la posición angular respecto al Sol y la Tierra.",
+                eclipse: "Demostración geométrica del alineamiento orbital para eclipses solares y lunares.",
+                cometa: "Modelado de órbita elíptica de alta excentricidad y aceleración en las proximidades del perihelio.",
+                redshift: "Efecto Doppler relativista y desplazamiento hacia el rojo en el espectro electromagnético galáctico.",
+                binaria: "Danza gravitacional de un sistema estelar binario orbitando sobre su centro de masas común.",
+                sandbox: "Entorno interactivo N-cuerpos para probar trayectorias gravitacionales libres.",
+                lente: "Distorsión óptica del espacio-tiempo provocada por una masa intermedia muy densa."
+            };
+            document.getElementById('lab-explanation').innerText = explanations[sim] || '';
+            const titles = {
+                orbita: "Órbitas Planetarias",
+                fases: "Fases Lunares",
+                eclipse: "Simulador de Eclipses",
+                cometa: "Dinámica Cometaria",
+                redshift: "Corrimiento al Rojo",
+                binaria: "Estrellas Binarias",
+                sandbox: "Caja de Arena Gravitacional",
+                lente: "Lente Gravitacional"
+            };
+            document.getElementById('lab-desc').innerText = titles[sim] || '';
         }
 
-        async function loadIllustrations() {
-            const container = document.getElementById('illustrations-container');
-            const data = JSON.parse(localStorage.getItem('adv_illustrations') || '[]');
-            if (data.length === 0) {
-                container.innerHTML = `
-                    <div class="editorial-border p-6 bg-space-panel">
-                        <img src="https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1000" class="w-full h-48 object-cover mb-4 filter grayscale-[20%]">
-                        <h4 class="text-lg font-serif font-bold text-white">Nebulosa del Velo</h4>
-                        <p class="text-xs text-space-muted mt-2">Remanente de supernova en la constelación del Cisne.</p>
-                    </div>
-                    <div class="editorial-border p-6 bg-space-panel">
-                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000" class="w-full h-48 object-cover mb-4 filter grayscale-[20%]">
-                        <h4 class="text-lg font-serif font-bold text-white">Pilares de la Creación</h4>
-                        <p class="text-xs text-space-muted mt-2">Región de formación estelar en la Nebulosa del Águila.</p>
-                    </div>
-                `;
-                return;
+        let sandboxBodies = [];
+        let mouseX = 0, mouseY = 0;
+
+        function startLabLoop() {
+            const canvas = document.getElementById('canvas-lab');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
             }
-            container.innerHTML = '';
-            data.forEach(item => {
-                container.innerHTML += `
-                    <div class="editorial-border p-6 bg-space-panel cursor-pointer group" onclick="openLightbox('${item.img}', '${item.title}', '${item.desc}')">
-                        <img src="${item.img}" class="w-full h-48 object-cover mb-4 group-hover:scale-105 transition-transform">
-                        <h4 class="text-lg font-serif font-bold text-white">${item.title}</h4>
-                        <p class="text-xs text-space-muted mt-2">${item.desc}</p>
-                    </div>
-                `;
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
             });
+
+            canvas.addEventListener('click', (e) => {
+                if (currentSim === 'sandbox') {
+                    const rect = canvas.getBoundingClientRect();
+                    sandboxBodies.push({
+                        x: e.clientX - rect.left,
+                        y: e.clientY - rect.top,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        mass: Math.random() * 5 + 2
+                    });
+                }
+            });
+
+            let angle = 0;
+
+            function render() {
+                ctx.fillStyle = '#0d0d14';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+
+                if (currentSim === 'orbita') {
+                    const dist = parseFloat(document.getElementById('slider-orb-dist').value) || 150;
+                    const vel = parseFloat(document.getElementById('slider-orb-vel').value) || 1.0;
+                    document.getElementById('val-orb-dist').innerText = dist;
+                    document.getElementById('val-orb-vel').innerText = vel;
+
+                    angle += 0.02 * vel;
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+                    ctx.fillStyle = '#c5a880';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, dist, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#232336';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    const px = cx + Math.cos(angle) * dist;
+                    const py = cy + Math.sin(angle) * dist;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                } else if (currentSim === 'fases') {
+                    const deg = parseFloat(document.getElementById('slider-fases').value) || 0;
+                    document.getElementById('val-fases').innerText = deg + '°';
+                    const rad = deg * Math.PI / 180;
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.fill();
+
+                    const mDist = 120;
+                    const mx = cx + Math.cos(rad) * mDist;
+                    const my = cy + Math.sin(rad) * mDist;
+
+                    ctx.beginPath();
+                    ctx.arc(mx, my, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fill();
+                } else if (currentSim === 'eclipse') {
+                    const prog = parseFloat(document.getElementById('slider-ecl-prog').value) || 0;
+                    document.getElementById('slider-ecl-prog').value = prog;
+                    const statusText = document.getElementById('eclipse-status-text');
+                    if (prog < 30) statusText.innerText = "Parcial";
+                    else if (prog < 70) statusText.innerText = "Anular";
+                    else statusText.innerText = "Total";
+
+                    ctx.beginPath();
+                    ctx.arc(cx - 60, cy, 50, 0, Math.PI * 2);
+                    ctx.fillStyle = '#eab308';
+                    ctx.fill();
+
+                    const lx = (cx - 60) + (prog / 100) * 120;
+                    ctx.beginPath();
+                    ctx.arc(lx, cy, 45, 0, Math.PI * 2);
+                    ctx.fillStyle = '#0d0d14';
+                    ctx.fill();
+                } else if (currentSim === 'cometa') {
+                    const ecc = parseFloat(document.getElementById('slider-cometa').value) || 0.7;
+                    document.getElementById('val-cometa').innerText = ecc;
+
+                    angle += 0.015;
+                    const a = 160;
+                    const b = a * Math.sqrt(1 - ecc * ecc);
+                    const cxOffset = cx + a * ecc;
+
+                    const px = cxOffset + a * Math.cos(angle);
+                    const py = cy + b * Math.sin(angle);
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+                    ctx.fillStyle = '#c5a880';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(px, py, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                } else if (currentSim === 'redshift') {
+                    const z = parseFloat(document.getElementById('slider-redshift').value) || 0;
+                    document.getElementById('val-redshift').innerText = z.toFixed(2);
+
+                    ctx.font = "14px monospace";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText(`Desplazamiento z = ${z.toFixed(2)}`, 30, 40);
+
+                    const color = z < 0.7 ? '#3b82f6' : (z < 1.4 ? '#a855f7' : '#ef4444');
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                } else if (currentSim === 'binaria') {
+                    const sep = parseFloat(document.getElementById('slider-bin-sep').value) || 100;
+                    document.getElementById('val-bin-sep').innerText = sep;
+                    angle += 0.03;
+
+                    const x1 = cx + Math.cos(angle) * (sep / 2);
+                    const y1 = cy + Math.sin(angle) * (sep / 2);
+                    const x2 = cx + Math.cos(angle + Math.PI) * (sep / 2);
+                    const y2 = cy + Math.sin(angle + Math.PI) * (sep / 2);
+
+                    ctx.beginPath();
+                    ctx.arc(x1, y1, 16, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(x2, y2, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fill();
+                } else if (currentSim === 'sandbox') {
+                    if (sandboxBodies.length === 0) {
+                        sandboxBodies.push({ x: cx, y: cy - 100, vx: 1.5, vy: 0, mass: 8 });
+                        sandboxBodies.push({ x: cx, y: cy + 100, vx: -1.5, vy: 0, mass: 4 });
+                    }
+                    sandboxBodies.forEach(b => {
+                        ctx.beginPath();
+                        ctx.arc(b.x, b.y, Math.max(3, b.mass), 0, Math.PI * 2);
+                        ctx.fillStyle = '#c5a880';
+                        ctx.fill();
+                        b.x += b.vx;
+                        b.y += b.vy;
+                    });
+                } else if (currentSim === 'lente') {
+                    ctx.beginPath();
+                    ctx.arc(mouseX || cx, mouseY || cy, 35, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#c5a880';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.strokeStyle = '#232336';
+                    for(let i = 50; i < canvas.width; i += 50) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, 0);
+                        ctx.lineTo(i, canvas.height);
+                        ctx.stroke();
+                    }
+                }
+
+                labAnimId = requestAnimationFrame(render);
+            }
+            render();
         }
 
-        async function fetchGallery() {
-            const container = document.getElementById('gallery-container');
-            const approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
-            if (approved.length === 0) {
-                container.innerHTML = `
-                    <div class="masonry-item">
-                        <div class="editorial-border p-6 bg-space-panel">
-                            <img src="https://images.unsplash.com/photo-1543722530-d2cc2013717e?q=80&w=1000" class="w-full object-cover mb-4 cursor-pointer" onclick="openLightbox(this.src, 'Galaxia de Andrómeda', 'Captura de larga exposición desde cielo oscuro. Autor: Carlos Mendoza')">
-                            <h4 class="text-xl font-serif font-bold text-white">Galaxia de Andrómeda</h4>
-                            <p class="text-xs text-space-muted mt-2">Autor: Carlos Mendoza</p>
-                        </div>
-                    </div>
-                    <div class="masonry-item">
-                        <div class="editorial-border p-6 bg-space-panel">
-                            <img src="https://images.unsplash.com/photo-1502134249126-9f3755a50d78?q=80&w=1000" class="w-full object-cover mb-4 cursor-pointer" onclick="openLightbox(this.src, 'Nebulosa de Orión', 'Detalle de la región central M42. Autor: Sofía Ruiz')">
-                            <h4 class="text-xl font-serif font-bold text-white">Nebulosa de Orión</h4>
-                            <p class="text-xs text-space-muted mt-2">Autor: Sofía Ruiz</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            container.innerHTML = '';
-            approved.forEach(item => {
-                container.innerHTML += `
-                    <div class="masonry-item">
-                        <div class="editorial-border p-6 bg-space-panel">
-                            <img src="${item.img}" class="w-full object-cover mb-4 cursor-pointer" onclick="openLightbox(this.src, '${item.title}', '${item.desc} - Autor: ${item.firstname} ${item.lastname}')">
-                            <h4 class="text-xl font-serif font-bold text-white">${item.title}</h4>
-                            <p class="text-xs text-space-muted mt-2">Autor: ${item.firstname} ${item.lastname}</p>
-                        </div>
-                    </div>
-                `;
-            });
+        function clearSandbox() {
+            sandboxBodies = [];
         }
 
         function openUploadModal() {
+            document.getElementById('upload-success-msg').classList.add('hidden');
             document.getElementById('modal-upload').classList.remove('hidden');
         }
 
@@ -460,9 +847,12 @@
             document.getElementById('modal-upload').classList.add('hidden');
         }
 
+        let pendingImageFile = null;
+
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
+                pendingImageFile = file;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const preview = document.getElementById('upload-preview');
@@ -475,34 +865,40 @@
         }
 
         function handleUpload(event) {
-            event.preventDefault();
-            const fileInput = document.getElementById('file-upload');
-            const file = fileInput.files[0];
-            if (!file) return;
+    event.preventDefault();
+    const emailInput = document.getElementById('up-email');
+    if (!emailInput.checkValidity()) {
+        emailInput.reportValidity();
+        return;
+    }
+    const firstName = document.getElementById('up-firstname').value.trim();
+    const lastName = document.getElementById('up-lastname').value.trim();
+    const title = document.getElementById('up-title').value.trim();
+    const desc = document.getElementById('up-desc').value.trim();
+    
+    const author = lastName ? `${firstName} ${lastName}` : firstName;
+    const previewSrc = document.getElementById('upload-preview').src || 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564';
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const newEntry = {
-                    id: Date.now(),
-                    firstname: document.getElementById('up-firstname').value,
-                    lastname: document.getElementById('up-lastname').value,
-                    email: document.getElementById('up-email').value,
-                    title: document.getElementById('up-title').value,
-                    desc: document.getElementById('up-desc').value,
-                    category: document.getElementById('up-category').value,
-                    img: e.target.result
-                };
-                const pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
-                pending.push(newEntry);
-                localStorage.setItem('adv_pending', JSON.stringify(pending));
-                alert("Obra enviada a revisión exitosamente.");
-                closeUploadModal();
-                event.target.reset();
-                document.getElementById('upload-preview').classList.add('hidden');
-                document.getElementById('upload-placeholder').classList.remove('hidden');
-            }
-            reader.readAsDataURL(file);
+    communityGallery.unshift({
+        img: previewSrc,
+        title: title.toUpperCase(),
+        author: author,
+        desc: desc
+    });
+
+    document.getElementById('upload-success-msg').classList.remove('hidden');
+
+    setTimeout(() => {
+        closeUploadModal();
+        event.target.reset();
+        document.getElementById('upload-preview').classList.add('hidden');
+        document.getElementById('upload-placeholder').classList.remove('hidden');
+        document.getElementById('upload-success-msg').classList.add('hidden');
+        if (document.getElementById('view-galeria').classList.contains('hidden') === false) {
+            fetchGallery();
         }
+    }, 1800);
+}
 
         function openLightbox(src, title, desc) {
             document.getElementById('lightbox-img').src = src;
@@ -515,275 +911,25 @@
             document.getElementById('modal-lightbox').classList.add('hidden');
         }
 
-        let labAnimId = null;
-        let currentSim = 'orbita';
-
-        function selectSim(sim) {
-            currentSim = sim;
-            ['orbita', 'eclipse', 'redshift', 'binaria'].forEach(s => {
-                const btn = document.getElementById('btn-sim-' + s);
-                const hud = document.getElementById('hud-' + s);
-                if (btn) {
-                    if (s === sim) {
-                        btn.className = "px-4 py-2 bg-white text-black transition-colors font-bold";
-                    } else {
-                        btn.className = "px-4 py-2 text-space-muted hover:text-white transition-colors border-l border-white/20";
-                    }
-                }
-                if (hud) {
-                    if (s === sim) hud.classList.remove('hidden');
-                    else hud.classList.add('hidden');
-                }
-            });
-            const titles = {
-                orbita: "Problema de los 2 Cuerpos: Órbitas",
-                eclipse: "Simulación de Ocultación y Eclipses",
-                redshift: "Desplazamiento al Rojo Cosmológico",
-                binaria: "Sistemas Estelares Binarios"
-            };
-            document.getElementById('lab-desc').innerText = titles[sim];
-        }
-
-        function startLabLoop() {
-            const canvas = document.getElementById('canvas-lab');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            function resize() {
-                canvas.width = canvas.parentElement.clientWidth;
-                canvas.height = canvas.parentElement.clientHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            let angle = 0;
-
-            function render() {
-                ctx.fillStyle = '#050508';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                const cx = canvas.width / 2;
-                const cy = canvas.height / 2;
-
-                if (currentSim === 'orbita') {
-                    const dist = parseFloat(document.getElementById('slider-orb-dist').value);
-                    const vel = parseFloat(document.getElementById('slider-orb-vel').value);
-                    document.getElementById('val-orb-dist').innerText = dist;
-                    document.getElementById('val-orb-vel').innerText = vel.toFixed(1);
-
-                    angle += 0.02 * vel;
-
-                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, dist, 0, Math.PI * 2);
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#ffaa33';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, 20, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    const x = cx + Math.cos(angle) * dist;
-                    const y = cy + Math.sin(angle) * dist;
-                    ctx.fillStyle = '#a8b1ff';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 10, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (currentSim === 'eclipse') {
-                    const prog = parseFloat(document.getElementById('slider-ecl-prog').value);
-                    document.getElementById('val-redshift') && (document.getElementById('val-redshift').innerText = prog);
-                    
-                    const statusText = document.getElementById('eclipse-status-text');
-                    if (prog < 20) statusText.innerText = "Primer Contacto";
-                    else if (prog < 50) statusText.innerText = "Parcial";
-                    else if (prog === 50) statusText.innerText = "Totalidad";
-                    else if (prog < 80) statusText.innerText = "Parcial";
-                    else statusText.innerText = "Último Contacto";
-
-                    ctx.fillStyle = '#ffcc00';
-                    ctx.beginPath();
-                    ctx.arc(cx - 100, cy, 60, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    const moonX = (cx - 100) + (prog / 100) * 200;
-                    ctx.fillStyle = '#050508';
-                    ctx.beginPath();
-                    ctx.arc(moonX, cy, 58, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (currentSim === 'redshift') {
-                    const z = parseFloat(document.getElementById('slider-redshift').value);
-                    document.getElementById('val-redshift').innerText = z.toFixed(2);
-
-                    let color = '#3b82f6';
-                    if (z > 0.5) color = '#8b5cf6';
-                    if (z > 1.0) color = '#ec4899';
-                    if (z > 1.5) color = '#ef4444';
-
-                    ctx.fillStyle = color;
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, 40, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '14px JetBrains Mono';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(`Desplazamiento z = ${z.toFixed(2)}`, cx, cy + 70);
-                } else if (currentSim === 'binaria') {
-                    const sep = parseFloat(document.getElementById('slider-bin-sep').value);
-                    const vel = parseFloat(document.getElementById('slider-bin-vel').value);
-                    document.getElementById('val-bin-sep').innerText = sep;
-                    document.getElementById('val-bin-vel').innerText = vel.toFixed(1);
-
-                    angle += 0.03 * vel;
-
-                    const x1 = cx + Math.cos(angle) * sep;
-                    const y1 = cy + Math.sin(angle) * sep;
-                    const x2 = cx + Math.cos(angle + Math.PI) * sep;
-                    const y2 = cy + Math.sin(angle + Math.PI) * sep;
-
-                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#60a5fa';
-                    ctx.beginPath();
-                    ctx.arc(x1, y1, 15, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = '#f87171';
-                    ctx.beginPath();
-                    ctx.arc(x2, y2, 12, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                labAnimId = requestAnimationFrame(render);
-            }
-            if (labAnimId) cancelAnimationFrame(labAnimId);
-            render();
-        }
-
-        document.getElementById('admin-password').addEventListener('input', function(e) {
-            if (e.target.value === 'ADV2026') {
-                switchAdminTab('pending');
-            }
-        });
-
-        function switchAdminTab(tab) {
-            ['pending', 'approved', 'illustrations'].forEach(t => {
-                const el = document.getElementById('admin-tab-' + t);
-                if(el) el.className = "admin-tab-inactive pb-4 -mb-4 hover:text-white text-space-muted";
-            });
-            const act = document.getElementById('admin-tab-' + tab);
-            if(act) act.className = "admin-tab-active pb-4 -mb-4 font-bold text-white";
-
-            const container = document.getElementById('admin-container');
-            const uploadBox = document.getElementById('admin-illustrations-upload');
-            
-            if (tab === 'illustrations') {
-                container.innerHTML = '';
-                uploadBox.classList.remove('hidden');
-                return;
-            }
-            uploadBox.classList.add('hidden');
-
-            if (tab === 'pending') {
-                const pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
-                if (pending.length === 0) {
-                    container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No hay obras pendientes de revisión.</p>';
-                    return;
-                }
-                container.innerHTML = '';
-                pending.forEach(item => {
-                    container.innerHTML += `
-                        <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between">
-                            <div>
-                                <img src="${item.img}" class="w-full h-48 object-cover mb-4">
-                                <h4 class="text-xl font-serif font-bold text-white">${item.title}</h4>
-                                <p class="text-xs text-space-accent font-mono mt-1">Autor: ${item.firstname} ${item.lastname} (${item.email})</p>
-                                <p class="text-xs text-space-muted mt-2">${item.desc || 'Sin descripción'}</p>
-                            </div>
-                            <div class="flex gap-4 mt-6">
-                                <button onclick="approveItem(${item.id})" class="w-1/2 py-2 bg-white text-black font-mono text-[10px] uppercase font-bold hover:bg-space-accent transition-colors">Aprobar</button>
-                                <button onclick="rejectItem(${item.id})" class="w-1/2 py-2 border border-red-500/50 text-red-400 font-mono text-[10px] uppercase font-bold hover:bg-red-500/10 transition-colors">Rechazar</button>
-                            </div>
+        function fetchGallery() {
+            const container = document.getElementById('gallery-container');
+            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">';
+            communityGallery.forEach(item => {
+                html += `
+                    <div class="editorial-border p-4 bg-space-panel group cursor-pointer flex flex-col justify-between" onclick="openLightbox('${item.img}', '${item.title}', '${item.desc || ''}')">
+                        <div>
+                            <img src="${item.img}" class="w-full h-64 object-cover mb-4 editorial-border group-hover:scale-[1.02] transition-transform duration-500">
+                            <h4 class="font-serif font-bold text-white text-base">${item.title}</h4>
+                            <p class="text-[11px] font-mono text-space-muted mt-1 uppercase">Por ${item.author}</p>
                         </div>
-                    `;
-                });
-            } else if (tab === 'approved') {
-                const approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
-                if (approved.length === 0) {
-                    container.innerHTML = '<p class="text-space-muted font-mono text-sm col-span-full text-center">No hay obras públicas en la exhibición.</p>';
-                    return;
-                }
-                container.innerHTML = '';
-                approved.forEach(item => {
-                    container.innerHTML += `
-                        <div class="editorial-border p-6 bg-space-panel flex flex-col justify-between">
-                            <div>
-                                <img src="${item.img}" class="w-full h-48 object-cover mb-4">
-                                <h4 class="text-xl font-serif font-bold text-white">${item.title}</h4>
-                                <p class="text-xs text-space-accent font-mono mt-1">Autor: ${item.firstname} ${item.lastname}</p>
-                            </div>
-                            <button onclick="removeApprovedItem(${item.id})" class="w-full mt-6 py-2 border border-red-500/50 text-red-400 font-mono text-[10px] uppercase font-bold hover:bg-red-500/10 transition-colors">Eliminar de Exhibición</button>
-                        </div>
-                    `;
-                });
-            }
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
         }
 
-        function approveItem(id) {
-            let pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
-            let approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
-            const index = pending.findIndex(i => i.id === id);
-            if (index !== -1) {
-                approved.push(pending[index]);
-                pending.splice(index, 1);
-                localStorage.setItem('adv_pending', JSON.stringify(pending));
-                localStorage.setItem('adv_approved', JSON.stringify(approved));
-                switchAdminTab('pending');
-            }
-        }
-
-        function rejectItem(id) {
-            let pending = JSON.parse(localStorage.getItem('adv_pending') || '[]');
-            pending = pending.filter(i => i.id !== id);
-            localStorage.setItem('adv_pending', JSON.stringify(pending));
-            switchAdminTab('pending');
-        }
-
-        function removeApprovedItem(id) {
-            let approved = JSON.parse(localStorage.getItem('adv_approved') || '[]');
-            approved = approved.filter(i => i.id !== id);
-            localStorage.setItem('adv_approved', JSON.stringify(approved));
-            switchAdminTab('approved');
-        }
-
-        function handleAdminIllustrationUpload(event) {
-            event.preventDefault();
-            const fileInput = document.getElementById('admin-file');
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const newIll = {
-                    id: Date.now(),
-                    title: document.getElementById('admin-title').value,
-                    desc: document.getElementById('admin-desc').value,
-                    img: e.target.result
-                };
-                const illustrations = JSON.parse(localStorage.getItem('adv_illustrations') || '[]');
-                illustrations.push(newIll);
-                localStorage.setItem('adv_illustrations', JSON.stringify(illustrations));
-                alert("Ilustración publicada exitosamente.");
-                event.target.reset();
-                switchAdminTab('illustrations');
-            }
-            reader.readAsDataURL(file);
-        }
-
-        loadHomeData();
+        window.onload = loadHomeData;
     </script>
 </body>
 </html>
