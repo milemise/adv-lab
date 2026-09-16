@@ -15,6 +15,8 @@ from database import Base, engine, get_db
 from models import Photo, Photographer, Category
 from config import *
 
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "123456")
+
 try:
     from email_service import EmailService
 except ImportError:
