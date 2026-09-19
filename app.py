@@ -183,7 +183,7 @@ HISTORY = [
         'year': '1930–1942',
         'title': 'Ramón Enrique Gaviola y la construcción de instrumentos',
         'lead': 'La física y la ingeniería óptica comenzaron a ser parte esencial de la astronomía argentina.',
-        'image': 'https://images.unsplash.com/photo-1444703686981-a3abb4c4d4fe?auto=format&fit=crop&w=1600&q=90',
+        'image': 'https://commons.wikimedia.org/wiki/Special:FilePath/1958-Gaviola-Clases.png',
         'body': [
             'Ramón Enrique Gaviola es una de las figuras más importantes de la historia científica argentina del siglo XX. Su trayectoria combinó física, instrumentación y astronomía, y está vinculada de manera decisiva con el desarrollo de grandes instrumentos ópticos en el país. Esta parte de la historia es especialmente valiosa porque muestra que una observación astronómica empieza mucho antes de la imagen final: comienza con materiales, óptica, mecánica, medición y diseño.',
             'El desarrollo del telescopio de Bosque Alegre representó una apuesta por construir infraestructura científica propia. El instrumento fue inaugurado en 1942 y se convirtió en una pieza central del trabajo astronómico del país. La construcción y puesta a punto de un telescopio de este tipo exige resolver problemas físicos y de ingeniería que anticipan muchas prácticas presentes hoy en la industria espacial.',
