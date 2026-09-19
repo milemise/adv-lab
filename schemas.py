@@ -31,7 +31,7 @@ class PhotoLikeCreate(BaseModel):
 
 class NoteCreate(BaseModel):
     username: str = Field(min_length=2, max_length=100)
-    email: str = Field(min_length=5, max_length=180)
+    email: Optional[str] = Field(default='', max_length=180)
     body: str = Field(min_length=5, max_length=900)
 
 class NoteLikeCreate(BaseModel):

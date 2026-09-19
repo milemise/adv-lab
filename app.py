@@ -24,6 +24,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import desc, func, inspect, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from config import ADMIN_TOKEN, ALLOWED_HOSTS, INSTAGRAM_USERNAME, NASA_API_KEY
@@ -183,7 +184,7 @@ HISTORY = [
         'year': '1930–1942',
         'title': 'Ramón Enrique Gaviola y la construcción de instrumentos',
         'lead': 'La física y la ingeniería óptica comenzaron a ser parte esencial de la astronomía argentina.',
-        'image': 'https://commons.wikimedia.org/wiki/Special:FilePath/1958-Gaviola-Clases.png',
+        'image': 'https://images.unsplash.com/photo-1444703686981-a3abb4c4d4fe?auto=format&fit=crop&w=1600&q=90',
         'body': [
             'Ramón Enrique Gaviola es una de las figuras más importantes de la historia científica argentina del siglo XX. Su trayectoria combinó física, instrumentación y astronomía, y está vinculada de manera decisiva con el desarrollo de grandes instrumentos ópticos en el país. Esta parte de la historia es especialmente valiosa porque muestra que una observación astronómica empieza mucho antes de la imagen final: comienza con materiales, óptica, mecánica, medición y diseño.',
             'El desarrollo del telescopio de Bosque Alegre representó una apuesta por construir infraestructura científica propia. El instrumento fue inaugurado en 1942 y se convirtió en una pieza central del trabajo astronómico del país. La construcción y puesta a punto de un telescopio de este tipo exige resolver problemas físicos y de ingeniería que anticipan muchas prácticas presentes hoy en la industria espacial.',
@@ -420,6 +421,13 @@ async def security_middleware(request: Request, call_next):
 
 def clean_text(value):
     return ' '.join((value or '').replace('\n', ' ').replace('\r', ' ').split())
+
+
+def slugify(value):
+    value = clean_text(value).lower()
+    value = re.sub(r'[^a-z0-9\s-]', '', value)
+    value = re.sub(r'[-\s]+', '-', value).strip('-')
+    return value[:240]
 
 
 def valid_email(value):
@@ -713,11 +721,12 @@ def notes(offset: int = 0, limit: int = 20, db: Session = Depends(get_db)):
 @app.post('/api/community/notes')
 def create_note(request: Request, payload: NoteCreate, db: Session = Depends(get_db)):
     rate_limit(request, 'notes')
-    if not valid_email(payload.email):
-        raise HTTPException(400, 'Correo electrónico inválido')
     if not payload.username.strip() or not payload.body.strip():
-        raise HTTPException(400, 'Completá usuario y nota')
-    note = CommunityNote(username=clean_text(payload.username)[:100], email=payload.email.lower().strip()[:180], body=clean_text(payload.body)[:900], approved=True)
+        raise HTTPException(400, 'Completá tu usuario de Instagram y la nota')
+    email = (payload.email or '').strip().lower()
+    if email and not valid_email(email):
+        raise HTTPException(400, 'Correo electrónico inválido')
+    note = CommunityNote(username=clean_text(payload.username)[:100], email=email[:180], body=clean_text(payload.body)[:900], approved=True)
     db.add(note)
     db.commit()
     db.refresh(note)
@@ -855,8 +864,13 @@ def admin_products(db: Session = Depends(get_db)):
 
 
 @app.get('/api/admin/contact-requests', dependencies=[Depends(admin_guard)])
-def admin_contact_requests(db: Session = Depends(get_db)):
-    return [{'id': r.id, 'product_id': r.product_id, 'product_name': r.product_name, 'full_name': r.full_name, 'whatsapp': r.whatsapp, 'email': r.email, 'message': r.message, 'status': r.status, 'created_at': r.created_at.isoformat()} for r in db.query(ContactRequest).order_by(desc(ContactRequest.created_at)).all()]
+def admin_contact_requests(search: str = '', db: Session = Depends(get_db)):
+    query = db.query(ContactRequest)
+    term = clean_text(search)[:80]
+    if term:
+        like = f'%{term}%'
+        query = query.filter((ContactRequest.full_name.ilike(like)) | (ContactRequest.email.ilike(like)) | (ContactRequest.whatsapp.ilike(like)) | (ContactRequest.product_name.ilike(like)) | (ContactRequest.message.ilike(like)))
+    return [{'id': r.id, 'product_id': r.product_id, 'product_name': r.product_name, 'full_name': r.full_name, 'whatsapp': r.whatsapp, 'email': r.email, 'message': r.message, 'status': r.status, 'created_at': r.created_at.isoformat()} for r in query.order_by(desc(ContactRequest.created_at)).all()]
 
 
 @app.post('/api/admin/contact-requests/{request_id}/status', dependencies=[Depends(admin_guard)])
@@ -882,13 +896,55 @@ def article_detail(slug: str, db: Session = Depends(get_db)):
     return serialize_article(article)
 
 
+@app.get('/api/admin/articles', dependencies=[Depends(admin_guard)])
+def admin_articles(db: Session = Depends(get_db)):
+    return [serialize_article(a) for a in db.query(Article).order_by(desc(Article.created_at)).all()]
+
+
 @app.post('/api/admin/articles', dependencies=[Depends(admin_guard)])
 def create_article(payload: ArticleCreate, db: Session = Depends(get_db)):
-    article = Article(title=clean_text(payload.title)[:220], slug=clean_text(payload.slug).lower().replace(' ', '-')[:240], content=payload.content[:20000], author=clean_text(payload.author)[:140], cover=normalize_http_url(payload.cover, ''), published=payload.published)
+    slug = slugify(payload.slug)
+    if len(slug) < 2:
+        raise HTTPException(400, 'El slug no es válido')
+    if db.query(Article).filter(Article.slug == slug).first():
+        raise HTTPException(409, 'Ya existe una nota con ese slug. Elegí otro.')
+    article = Article(title=clean_text(payload.title)[:220], slug=slug, content=payload.content[:20000], author=clean_text(payload.author)[:140], cover=normalize_http_url(payload.cover, ''), published=payload.published)
     db.add(article)
     db.commit()
     db.refresh(article)
     return serialize_article(article)
+
+
+@app.put('/api/admin/articles/{article_id}', dependencies=[Depends(admin_guard)])
+def update_article(article_id: int, payload: ArticleCreate, db: Session = Depends(get_db)):
+    article = db.get(Article, article_id)
+    if not article:
+        raise HTTPException(404, 'Nota no encontrada')
+    slug = slugify(payload.slug)
+    if len(slug) < 2:
+        raise HTTPException(400, 'El slug no es válido')
+    duplicate = db.query(Article).filter(Article.slug == slug, Article.id != article_id).first()
+    if duplicate:
+        raise HTTPException(409, 'Ya existe otra nota con ese slug.')
+    article.title = clean_text(payload.title)[:220]
+    article.slug = slug
+    article.content = payload.content[:20000]
+    article.author = clean_text(payload.author)[:140]
+    article.cover = normalize_http_url(payload.cover, '')
+    article.published = payload.published
+    db.commit()
+    db.refresh(article)
+    return serialize_article(article)
+
+
+@app.delete('/api/admin/articles/{article_id}', dependencies=[Depends(admin_guard)])
+def archive_article(article_id: int, db: Session = Depends(get_db)):
+    article = db.get(Article, article_id)
+    if not article:
+        raise HTTPException(404, 'Nota no encontrada')
+    article.published = False
+    db.commit()
+    return {'ok': True, 'published': False}
 
 
 @app.get('/api/events')
