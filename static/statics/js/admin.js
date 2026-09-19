@@ -1,61 +1,21 @@
-function fetchPending() {
-    fetch('/api/pending')
-        .then(res => res.json())
-        .then(items => {
-            const container = document.getElementById('admin-pending-container');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            if (items.length === 0) {
-                container.innerHTML = '<p>No hay obras pendientes de revisión.</p>';
-                return;
-            }
-
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'admin-item-card';
-                div.innerHTML = `
-                    <img src="${item.img}" width="120" style="object-fit:cover; border-radius:8px;">
-                    <div>
-                        <h4>${item.title}</h4>
-                        <p><strong>Autor:</strong> ${item.firstname} ${item.lastname} (${item.instagram})</p>
-                        <p>${item.desc}</p>
-                        <button onclick="approveItem(${item.id})" class="btn-approve">Aprobar</button>
-                        <button onclick="rejectItem(${item.id})" class="btn-reject">Rechazar</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        })
-        .catch(err => console.error('Error cargando pendientes:', err));
-}
-
-function approveItem(id) {
-    fetch('/api/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) fetchPending();
-    });
-}
-
-function rejectItem(id) {
-    fetch('/api/reject', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) fetchPending();
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('admin-pending-container')) {
-        fetchPending();
-    }
-});
+let adminToken='';
+const A=id=>document.getElementById(id);
+const adminFetch=async(url,options={})=>{const headers={...(options.headers||{}),'X-Admin-Token':adminToken};const response=await fetch(url,{...options,headers});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.detail||'Solicitud fallida');return data};
+const adminToast=message=>{const el=A('adminToast');el.textContent=message;el.classList.add('show');clearTimeout(window.__adminToast);window.__adminToast=setTimeout(()=>el.classList.remove('show'),3200)};
+const esc=t=>{const d=document.createElement('div');d.textContent=t??'';return d.innerHTML};
+function categoryOptions(list,current=''){return `<option value="">Seleccionar categoría</option>${list.map(x=>`<option value="${x.id}" ${String(x.id)===String(current)?'selected':''}>${esc(x.icon||'✦')} ${esc(x.name)}</option>`).join('')}`}
+async function bootAdmin(){try{const [stats,pending,products,requests,categories]=await Promise.all([adminFetch('/api/admin/stats'),adminFetch('/api/admin/pending'),adminFetch('/api/admin/products'),adminFetch('/api/admin/contact-requests'),fetch('/api/categories').then(r=>r.json())]);A('dashPending').textContent=stats.pending;A('dashProducts').textContent=stats.active_products;A('dashRequests').textContent=stats.requests;A('dashPhotos').textContent=stats.photos;A('productCategory').innerHTML=categoryOptions(categories);renderPending(pending);renderProducts(products);renderRequests(requests)}catch(error){A('loginError').textContent=error.message;A('loginError').classList.remove('hidden')}}
+function renderPending(items){A('pendingList').innerHTML=items.length?items.map(p=>`<article class="panel-card rounded-2xl overflow-hidden"><img src="${esc(p.image)}" class="w-full aspect-[16/10] object-cover" alt=""><div class="p-4"><div class="flex justify-between gap-2"><div><h3 class="font-display text-xl">${esc(p.title)}</h3><p class="text-xs text-slate-500 mt-1">${esc(p.photographer||'Comunidad')} · ${esc(p.location||'sin ubicación')}</p></div><span class="photo-tag">${esc(p.category||'Otros')}</span></div><div class="flex gap-2 mt-4"><button class="primary-btn !min-h-0" type="button" data-moderate="approve" data-id="${p.id}">Aprobar</button><button class="secondary-btn !min-h-0" type="button" data-moderate="reject" data-id="${p.id}">Rechazar</button></div></div></article>`).join(''):`<div class="panel-card rounded-2xl p-8 text-slate-500">No hay aportes pendientes.</div>`}
+function renderProducts(items){A('productsAdmin').innerHTML=items.map(p=>`<article class="panel-card rounded-2xl p-4 flex gap-4"><img src="${esc(p.image||'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=500&q=80')}" class="w-28 h-24 object-cover rounded-xl" alt=""><div class="min-w-0 flex-1"><span class="product-category">${esc(p.category)}</span><h3 class="font-display text-xl">${esc(p.name)}</h3><p class="text-xs text-slate-500">$ ${Number(p.price).toLocaleString('es-AR')} · stock ${p.stock} · ${p.active?'visible':'oculto'}</p><div class="flex gap-2 mt-3"><button class="secondary-btn !min-h-0 !py-2 !px-3 text-xs" type="button" data-edit-product="${p.id}">Editar</button>${p.active?`<button class="secondary-btn !min-h-0 !py-2 !px-3 text-xs" type="button" data-product-state="hide" data-id="${p.id}">Ocultar</button>`:`<button class="secondary-btn !min-h-0 !py-2 !px-3 text-xs" type="button" data-product-state="restore" data-id="${p.id}">Restaurar</button>`}</div></div></article>`).join('')}
+function renderRequests(items){A('requestsList').innerHTML=items.length?items.map(r=>`<article class="panel-card rounded-2xl p-4"><div class="flex flex-col md:flex-row justify-between gap-3"><div><span class="product-category">${esc(r.product_name||'Consulta general')}</span><h3 class="font-display text-xl">${esc(r.full_name)}</h3><p class="text-sm text-slate-400 mt-1">WhatsApp: ${esc(r.whatsapp)} · ${esc(r.email)}</p><p class="text-sm text-slate-300 mt-3 leading-6">${esc(r.message)}</p></div><select class="select-input !w-auto" data-request-status="${r.id}"><option value="nuevo" ${r.status==='nuevo'?'selected':''}>nuevo</option><option value="contactado" ${r.status==='contactado'?'selected':''}>contactado</option><option value="cerrado" ${r.status==='cerrado'?'selected':''}>cerrado</option></select></div></article>`).join(''):`<div class="panel-card rounded-2xl p-8 text-slate-500">No hay consultas todavía.</div>`}
+async function moderate(id,action){try{await adminFetch(action==='approve'?`/api/admin/approve/${id}`:`/api/admin/reject/${id}`,{method:action==='approve'?'POST':'DELETE'});adminToast(action==='approve'?'Aporte aprobado':'Aporte marcado como rechazado');bootAdmin()}catch(e){adminToast(e.message)}}
+async function productState(id,state){try{await adminFetch(state==='hide'?`/api/admin/products/${id}`:`/api/admin/products/${id}/restore`,{method:state==='hide'?'DELETE':'POST'});adminToast(state==='hide'?'Producto oculto':'Producto restaurado');bootAdmin()}catch(e){adminToast(e.message)}}
+function editProduct(id){adminFetch('/api/admin/products').then(items=>{const p=items.find(x=>x.id===id);if(!p)return;A('productId').value=p.id;A('productName').value=p.name;A('productDescription').value=p.description||'';A('productPrice').value=p.price||0;A('productStock').value=p.stock||0;A('productImage').value=p.image||'';A('productContact').value=p.contact_url||'';A('productCategory').value=p.category_id||'';document.getElementById('tab-productos').scrollIntoView({behavior:'smooth',block:'start'})}).catch(e=>adminToast(e.message))}
+A('adminToken')?.addEventListener('keydown',e=>{if(e.key==='Enter')A('loginBtn').click()});
+document.addEventListener('click',async event=>{const tab=event.target.closest('.admin-tab');if(tab){document.querySelectorAll('.admin-tab').forEach(x=>x.classList.remove('active'));tab.classList.add('active');document.querySelectorAll('.admin-tab-panel').forEach(x=>x.classList.add('hidden'));A(`tab-${tab.dataset.tab}`).classList.remove('hidden');return}const moderateBtn=event.target.closest('[data-moderate]');if(moderateBtn){await moderate(Number(moderateBtn.dataset.id),moderateBtn.dataset.moderate);return}const stateBtn=event.target.closest('[data-product-state]');if(stateBtn){await productState(Number(stateBtn.dataset.id),stateBtn.dataset.productState);return}const editBtn=event.target.closest('[data-edit-product]');if(editBtn){editProduct(Number(editBtn.dataset.editProduct));return}});
+A('loginBtn')?.addEventListener('click',async()=>{adminToken=A('adminToken').value.trim();try{await adminFetch('/api/admin/stats');A('loginBox').classList.add('hidden');A('adminApp').classList.remove('hidden');A('loginError').classList.add('hidden');bootAdmin()}catch(e){A('loginError').textContent='Token inválido o servidor no disponible';A('loginError').classList.remove('hidden')}});
+A('productForm')?.addEventListener('submit',async e=>{e.preventDefault();const payload={name:A('productName').value,description:A('productDescription').value,price:Number(A('productPrice').value||0),image:A('productImage').value,stock:Number(A('productStock').value||0),active:true,contact_url:A('productContact').value||'https://ig.me/m/astrodevic',category_id:Number(A('productCategory').value)||null};try{const id=A('productId').value;await adminFetch(id?`/api/admin/products/${id}`:'/api/admin/products',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});A('productForm').reset();A('productId').value='';adminToast('Producto guardado');bootAdmin()}catch(error){adminToast(error.message)}});
+A('resetProduct')?.addEventListener('click',()=>{A('productForm').reset();A('productId').value=''});
+A('uploadAsset')?.addEventListener('click',async()=>{const file=A('assetFile').files?.[0];if(!file)return adminToast('Elegí una imagen');const form=new FormData();form.append('file',file);try{const result=await adminFetch('/api/admin/upload',{method:'POST',body:form});A('productImage').value=result.url;adminToast('Imagen subida')}catch(e){adminToast(e.message)}});
+A('articleForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await adminFetch('/api/admin/articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:A('articleTitle').value,slug:A('articleSlug').value,content:A('articleContent').value,author:'ADV-Lab',cover:A('articleCover').value,published:true})});A('articleForm').reset();adminToast('Nota publicada')}catch(error){adminToast(error.message)}});
+document.addEventListener('change',async event=>{const select=event.target.closest('[data-request-status]');if(!select)return;try{await adminFetch(`/api/admin/contact-requests/${select.dataset.requestStatus}/status?status=${encodeURIComponent(select.value)}`,{method:'POST'});adminToast('Estado actualizado')}catch(error){adminToast(error.message)}});

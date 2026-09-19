@@ -1,34 +1,23 @@
-function fetchGallery() {
-    fetch('/api/gallery')
-        .then(res => res.json())
-        .then(items => {
-            const galleryContainer = document.getElementById('gallery-container');
-            if (!galleryContainer) return;
-
-            galleryContainer.innerHTML = '';
-            if (items.length === 0) {
-                galleryContainer.innerHTML = '<p>No hay obras publicadas todavía.</p>';
-                return;
-            }
-
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'gallery-card';
-                card.innerHTML = `
-                    <img src="${item.img}" alt="${item.title}">
-                    <h3>${item.title}</h3>
-                    <p>Artista: ${item.firstname} ${item.lastname}</p>
-                    ${item.instagram ? `<a href="https://instagram.com/${item.instagram.replace('@','')}" target="_blank">@${item.instagram.replace('@','')}</a>` : ''}
-                    <p>${item.desc}</p>
-                `;
-                galleryContainer.appendChild(card);
-            });
-        })
-        .catch(err => console.error('Error cargando galería:', err));
+let galleryLoaded = false;
+async function loadCommunity(reset = true) {
+  try {
+    if (reset) { state.communityOffset = 0; state.photos = []; }
+    const params = new URLSearchParams({ offset: String(state.communityOffset), limit: '24', search: state.communitySearch || '', category: state.communityCategory || '' });
+    const data = await api(`/api/contributions?${params.toString()}`);
+    state.photos = reset ? data.items : state.photos.concat(data.items); state.communityHasMore = data.has_more; renderGallery(); $('galleryMore').classList.toggle('hidden', !data.has_more); if (reset) await loadNotes(true);
+    galleryLoaded = true;
+  } catch (error) { toast(error.message); }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('gallery-container')) {
-        fetchGallery();
-    }
-});
+function renderGallery() {
+  const photos = state.photos;
+  $('galleryEmpty').classList.toggle('hidden', photos.length > 0);
+  $('galleryGrid').innerHTML = photos.map(photo=>`<article class="gallery-card"><button type="button" class="gallery-card-image" data-lightbox="${escapeHtml(photo.image)}" data-title="${escapeHtml(photo.title)}"><img loading="lazy" src="${safeUrl(photo.image)}" alt="${escapeHtml(photo.title)}"></button><div class="gallery-body"><div class="gallery-meta"><div><h3>${escapeHtml(photo.title)}</h3><div class="text-[11px] text-slate-500 mt-1">${escapeHtml(photo.photographer||'Comunidad')}${photo.instagram?` · ${escapeHtml(photo.instagram)}`:''}</div></div><span class="photo-tag">${escapeHtml(photo.category||'Otros')}</span></div>${photo.description?`<p>${escapeHtml(photo.description)}</p>`:''}<div class="photo-tags">${photo.location?`<span class="photo-tag">⌖ ${escapeHtml(photo.location)}</span>`:''}${photo.telescope?`<span class="photo-tag">⌁ ${escapeHtml(photo.telescope)}</span>`:''}${photo.camera?`<span class="photo-tag">◌ ${escapeHtml(photo.camera)}</span>`:''}</div><div class="gallery-actions"><span class="text-xs text-slate-500">${formatDate(photo.created_at)}</span><button class="like-btn" type="button" data-photo-like="${photo.id}">♡ ${photo.likes||0}</button></div></div></article>`).join('');
+}
+async function loadNotes(reset = true) { const offset=reset?0:state.notesOffset; const data=await api(`/api/community/notes?offset=${offset}&limit=20`); state.notes=reset?data.items:state.notes.concat(data.items); state.notesOffset=offset+data.items.length; state.notesHasMore=data.has_more; renderNotes(); $('notesMore').classList.toggle('hidden',!data.has_more); }
+function renderNotes(){ $('notesList').innerHTML=state.notes.map(note=>`<article class="note-card"><div class="note-top"><strong>${escapeHtml(note.username)}</strong><time>${formatDate(note.created_at)}</time></div><p>${escapeHtml(note.body)}</p><button class="note-like" type="button" data-note-like="${note.id}">♡ útil · ${note.likes||0}</button></article>`).join('')||'<div class="text-xs text-slate-500">Todavía no hay notas. Podés dejar la primera.</div>'; }
+function openLike(targetType,targetId){ $('likeTargetId').value=targetId; $('likeTargetType').value=targetType; $('likeTitle').textContent=targetType==='photo'?'Dejar un me gusta a la fotografía.':'Marcar como útil este consejo.'; openModal('likeModal'); }
+async function submitLike(event){ event.preventDefault(); const type=$('likeTargetType').value; const id=Number($('likeTargetId').value); try { const url=type==='photo'?`/api/contributions/${id}/like`:`/api/community/notes/${id}/like`; const result=await api(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('likeUser').value,email:$('likeEmail').value})}); $('likeForm').reset(); closeModals(); toast(result.already_liked?'Ya habías dejado tu interacción.':'Interacción registrada.'); if(type==='photo'){ const photo=state.photos.find(item=>item.id===id); if(photo) photo.likes=result.likes; renderGallery(); } else { const note=state.notes.find(item=>item.id===id); if(note) note.likes=result.likes; renderNotes(); } } catch(error){ toast(error.message); } }
+document.addEventListener('click',event=>{ const likePhoto=event.target.closest('[data-photo-like]'); if(likePhoto) openLike('photo',Number(likePhoto.dataset.photoLike)); const likeNote=event.target.closest('[data-note-like]'); if(likeNote) openLike('note',Number(likeNote.dataset.noteLike)); const lightbox=event.target.closest('[data-lightbox]'); if(lightbox){ $('lightboxImage').src=safeUrl(lightbox.dataset.lightbox); $('lightboxMeta').textContent=lightbox.dataset.title; $('lightbox').classList.remove('hidden'); } });
+async function loadCommunityCategories(){try{const categories=await api('/api/community/categories');const filter=$('photoCategory');const upload=document.querySelector('#uploadForm select[name=category]');const options=`<option value="">Todas las categorías</option>${categories.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')}`;if(filter)filter.innerHTML=options; if(upload)upload.innerHTML=`<option value="">Sin categoría</option>${categories.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')}`;}catch(error){toast(error.message)}}
+document.addEventListener('DOMContentLoaded',async()=>{ await loadCommunityCategories(); $('photoSearchBtn')?.addEventListener('click',()=>{state.communitySearch=$('photoSearch').value.trim();state.communityCategory=$('photoCategory').value;loadCommunity(true)}); $('photoSearch')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('photoSearchBtn').click()}}); $('photoCategory')?.addEventListener('change',()=>{state.communityCategory=$('photoCategory').value;loadCommunity(true)}); $('galleryMore')?.addEventListener('click',()=>{state.communityOffset+=24;loadCommunity(false)}); $('notesMore')?.addEventListener('click',()=>loadNotes(false)); $('likeForm')?.addEventListener('submit',submitLike); $('noteForm')?.addEventListener('submit',async(event)=>{ event.preventDefault(); if($('noteWebsite').value) return; try { await api('/api/community/notes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('noteUser').value,email:$('noteEmail').value,body:$('noteBody').value})}); $('noteForm').reset(); state.notesOffset=0; await loadNotes(true); toast('Nota publicada en la comunidad.'); } catch(error){toast(error.message)} }); });
+window.loadCommunity=loadCommunity; window.renderGallery=renderGallery;

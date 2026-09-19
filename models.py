@@ -1,268 +1,137 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Text,
-    DateTime,
-    ForeignKey,
-    Enum,
-    Boolean
-)
-
-from sqlalchemy.orm import relationship
 from datetime import datetime
-
+from enum import Enum
+from sqlalchemy import Boolean, Column, DateTime, Enum as SAEnum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy.orm import relationship
 from database import Base
 
-
-# ==========================================================
-# FOTÓGRAFOS
-# ==========================================================
+class PhotoStatus(str, Enum):
+    pendiente = 'pendiente'
+    aprobada = 'aprobada'
+    rechazada = 'rechazada'
 
 class Photographer(Base):
-    __tablename__ = "photographers"
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    first_name = Column(String(100), nullable=False)
-
-    last_name = Column(String(100), nullable=False)
-
-    email = Column(String(150), unique=True, nullable=False)
-
-    biography = Column(Text)
-
-    country = Column(String(100))
-
-    city = Column(String(100))
-
-    instagram = Column(String(200))
-
-    facebook = Column(String(200))
-
-    website = Column(String(200))
-
-    avatar = Column(String(255))
-
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow
-    )
-
-    photos = relationship(
-        "Photo",
-        back_populates="photographer",
-        cascade="all, delete"
-    )
-
-
-# ==========================================================
-# CATEGORÍAS
-# ==========================================================
+    __tablename__ = 'photographers'
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(80), nullable=False)
+    last_name = Column(String(80), nullable=False)
+    email = Column(String(180), nullable=False, unique=True)
+    biography = Column(Text, default='')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    photos = relationship('Photo', back_populates='photographer')
 
 class Category(Base):
-    __tablename__ = "categories"
-
+    __tablename__ = 'categories'
     id = Column(Integer, primary_key=True)
-
-    name = Column(
-        String(80),
-        unique=True,
-        nullable=False
-    )
-
-    icon = Column(String(100))
-
-    photos = relationship(
-        "Photo",
-        back_populates="category"
-    )
-
-
-# ==========================================================
-# FOTOGRAFÍAS
-# ==========================================================
+    name = Column(String(100), nullable=False, unique=True)
+    icon = Column(String(30), default='✦')
+    products = relationship('Product', back_populates='category')
 
 class Photo(Base):
-    __tablename__ = "photos"
-
+    __tablename__ = 'photos'
     id = Column(Integer, primary_key=True)
-
-    title = Column(
-        String(200),
-        nullable=False
+    title = Column(String(180), nullable=False)
+    description = Column(Text, default='')
+    image = Column(String(500), nullable=False)
+    telescope = Column(String(180), default='')
+    camera = Column(String(180), default='')
+    mount = Column(String(180), default='')
+    exposure = Column(String(80), default='')
+    iso = Column(String(50), default='')
+    contributor_name = Column(String(100), default='')
+    contributor_email = Column(String(180), default='')
+    instagram = Column(String(120), default='')
+    location = Column(String(180), default='')
+    community_category = Column(String(100), default='')
+    likes = Column(Integer, default=0)
+    status = Column(SAEnum(PhotoStatus), default=PhotoStatus.pendiente, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    photographer_id = Column(Integer, ForeignKey('photographers.id'), nullable=True)
+    photographer = relationship('Photographer', back_populates='photos')
+    __table_args__ = (
+        Index('ix_photos_status_created', 'status', 'created_at'),
+        Index('ix_photos_category_created', 'community_category', 'created_at'),
     )
 
-    description = Column(Text)
-
-    image = Column(
-        String(255),
-        nullable=False
+class PhotoLike(Base):
+    __tablename__ = 'photo_likes'
+    id = Column(Integer, primary_key=True)
+    photo_id = Column(Integer, ForeignKey('photos.id', ondelete='CASCADE'), nullable=False)
+    username = Column(String(100), nullable=False)
+    email = Column(String(180), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (
+        UniqueConstraint('photo_id', 'email', name='uq_photo_like_email'),
+        Index('ix_photo_likes_photo', 'photo_id'),
     )
 
-    thumbnail = Column(String(255))
-
-    equipment = Column(String(250))
-
-    telescope = Column(String(150))
-
-    camera = Column(String(150))
-
-    mount = Column(String(150))
-
-    filter = Column(String(150))
-
-    software = Column(String(150))
-
-    exposure = Column(String(80))
-
-    iso = Column(String(50))
-
-    frames = Column(String(50))
-
-    location = Column(String(200))
-
-    latitude = Column(String(50))
-
-    longitude = Column(String(50))
-
-    token = Column(
-        String(255),
-        unique=True
+class CommunityNote(Base):
+    __tablename__ = 'community_notes'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(100), nullable=False)
+    email = Column(String(180), nullable=False)
+    body = Column(Text, nullable=False)
+    approved = Column(Boolean, default=True)
+    likes = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (
+        Index('ix_notes_created', 'created_at'),
     )
 
-    status = Column(
-        Enum(
-            "pendiente",
-            "aprobada",
-            "rechazada",
-            name="photo_status"
-        ),
-        default="pendiente"
+class NoteLike(Base):
+    __tablename__ = 'note_likes'
+    id = Column(Integer, primary_key=True)
+    note_id = Column(Integer, ForeignKey('community_notes.id', ondelete='CASCADE'), nullable=False)
+    username = Column(String(100), nullable=False)
+    email = Column(String(180), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (
+        UniqueConstraint('note_id', 'email', name='uq_note_like_email'),
+        Index('ix_note_likes_note', 'note_id'),
     )
-
-    reject_reason = Column(Text)
-
-    featured = Column(
-        Boolean,
-        default=False
-    )
-
-    views = Column(
-        Integer,
-        default=0
-    )
-
-    likes = Column(
-        Integer,
-        default=0
-    )
-
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow
-    )
-
-    updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
-    )
-
-    photographer_id = Column(
-        Integer,
-        ForeignKey("photographers.id")
-    )
-
-    category_id = Column(
-        Integer,
-        ForeignKey("categories.id")
-    )
-
-    photographer = relationship(
-        "Photographer",
-        back_populates="photos"
-    )
-
-    category = relationship(
-        "Category",
-        back_populates="photos"
-    )
-
-
-# ==========================================================
-# ARTÍCULOS
-# ==========================================================
 
 class Article(Base):
-    __tablename__ = "articles"
-
+    __tablename__ = 'articles'
     id = Column(Integer, primary_key=True)
-
-    title = Column(
-        String(250),
-        nullable=False
-    )
-
-    slug = Column(
-        String(250),
-        unique=True
-    )
-
-    excerpt = Column(Text)
-
-    content = Column(Text)
-
-    cover = Column(String(255))
-
-    author = Column(String(150))
-
-    published = Column(
-        Boolean,
-        default=False
-    )
-
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow
-    )
-
-
-# ==========================================================
-# EVENTOS ASTRONÓMICOS
-# ==========================================================
+    title = Column(String(220), nullable=False)
+    slug = Column(String(240), nullable=False, unique=True)
+    content = Column(Text, nullable=False)
+    author = Column(String(140), default='ADV-Lab')
+    cover = Column(String(500), default='')
+    published = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class AstronomicalEvent(Base):
-    __tablename__ = "astronomical_events"
-
+    __tablename__ = 'astronomical_events'
     id = Column(Integer, primary_key=True)
+    title = Column(String(180), nullable=False)
+    description = Column(Text, default='')
+    event_date = Column(DateTime, nullable=False)
 
-    title = Column(String(200))
-
-    description = Column(Text)
-
-    type = Column(String(100))
-
-    event_date = Column(DateTime)
-
-    image = Column(String(255))
-
-
-# ==========================================================
-# CONFIGURACIÓN DEL SITIO
-# ==========================================================
-
-class SiteSettings(Base):
-    __tablename__ = "site_settings"
-
+class Product(Base):
+    __tablename__ = 'products'
     id = Column(Integer, primary_key=True)
+    name = Column(String(180), nullable=False)
+    description = Column(Text, default='')
+    price = Column(Float, default=0)
+    image = Column(String(500), default='')
+    stock = Column(Integer, default=0)
+    active = Column(Boolean, default=True)
+    contact_url = Column(String(500), default='')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    category_id = Column(Integer, ForeignKey('categories.id'))
+    category = relationship('Category', back_populates='products')
 
-    hero_title = Column(String(255))
-
-    hero_text = Column(Text)
-
-    featured_photo_id = Column(Integer)
-
-    featured_article_id = Column(Integer)
-
-    editor_pick = Column(Integer)
+class ContactRequest(Base):
+    __tablename__ = 'contact_requests'
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=True)
+    product_name = Column(String(180), default='')
+    full_name = Column(String(140), nullable=False)
+    whatsapp = Column(String(60), nullable=False)
+    email = Column(String(180), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String(40), default='nuevo')
+    __table_args__ = (
+        Index('ix_contact_requests_created', 'created_at'),
+    )

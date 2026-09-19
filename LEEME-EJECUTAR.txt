@@ -1,0 +1,9 @@
+ADV-Lab 7.1
+
+En PowerShell, dentro de la carpeta del proyecto:
+
+1) .\venv\Scripts\activate
+2) python -m pip install -r requirements.txt
+3) python -m uvicorn app:app --reload --host 127.0.0.1 --port 8000
+
+Si ya existe un venv, no hace falta crear otro.
